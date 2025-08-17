@@ -1,0 +1,10 @@
+<div class="countdown" data-countdown data-target="{{ section.settings.deadline }}">
+  <strong>{{ section.settings.title }}</strong>
+  <span class="cd" data-cd>00:00:00</span>
+</div>
+{% schema %}
+{ "name":"Countdown timer","settings":[
+  { "type":"text","id":"title","label":"Title","default":"Aanbieding eindigt over:" },
+  { "type":"text","id":"deadline","label":"Deadline (YYYY-MM-DDTHH:MM:SSZ)","default":"2025-12-31T23:59:59Z" }
+], "presets":[{"name":"Countdown timer"}] }
+{% endschema %}

@@ -1,0 +1,8 @@
+<h1>Addresses</h1>
+{% form 'customer_address', customer.new_address %}
+  {{ form | customer_address_form }}
+  <button class="btn btn--primary">Save</button>
+{% endform %}
+{% for address in customer.addresses %}
+  <div><strong>{{ address.first_name }} {{ address.last_name }}</strong> – {{ address.address1 }}, {{ address.city }}</div>
+{% endfor %}

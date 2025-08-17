@@ -1,0 +1,8 @@
+<h1>Account</h1>
+<p>{{ customer.email }}</p>
+<ul>
+  {% for order in customer.orders %}
+    <li><a href="{{ order.customer_url }}">{{ order.name }}</a> – {{ order.created_at | date: format: 'date' }} – {{ order.total_price | money }}</li>
+  {% endfor %}
+</ul>
+<a href="{{ routes.account_addresses_url }}">Addresses</a>
