@@ -1,0 +1,43 @@
+{
+  "general": {
+    "search": {
+      "search": "Search",
+      "placeholder": "What are you looking for?",
+      "hint": "Type to search\u2026"
+    },
+    "cookies": {
+      "message": "We use cookies to improve your experience.",
+      "accept": "Accept"
+    }
+  },
+  "newsletter": {
+    "subscribe": "Subscribe"
+  },
+  "sections": {
+    "cart": {
+      "title": "Cart",
+      "empty": "Your cart is empty",
+      "total": "Total",
+      "go_to_cart": "Go to cart"
+    },
+    "footer": {
+      "customer_service": "Customer service",
+      "company": "Company",
+      "rights": "All rights reserved."
+    },
+    "header": {
+      "cart": "Cart"
+    }
+  },
+  "products": {
+    "product": {
+      "add_to_cart": "Add to cart"
+    }
+  },
+  "accessibility": {
+    "close": "Close"
+  },
+  "password_page": {
+    "opening_soon": "Opening soon"
+  }
+}

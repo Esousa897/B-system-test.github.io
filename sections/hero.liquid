@@ -1,0 +1,19 @@
+<section class="hero">
+  <div class="container">
+    <h1>{{ section.settings.title }}</h1>
+    <p>{{ section.settings.subtitle }}</p>
+    <div class="hero__actions">
+      <a class="btn btn--primary" href="{{ section.settings.primary_link }}">{{ section.settings.primary_label }}</a>
+      <a class="btn" href="{{ section.settings.secondary_link }}">{{ section.settings.secondary_label }}</a>
+    </div>
+  </div>
+</section>
+{% schema %}
+{ "name":"Hero","settings":[
+  { "type":"text","id":"title","label":"Title","default":"BOLDYASE RESORT COLLECTION" },
+  { "type":"textarea","id":"subtitle","label":"Subtitle","default":"Luxe basis, klaar voor content." },
+  { "type":"url","id":"primary_link","label":"Primary link" },
+  { "type":"text","id":"primary_label","label":"Primary label","default":"Shop Collectie" },
+  { "type":"url","id":"secondary_link","label":"Secondary link" },
+  { "type":"text","id":"secondary_label","label":"Secondary label","default":"Bekijk Lookbook" }
+]}{% endschema %}

@@ -1,0 +1,13 @@
+<div class="drawer" data-search-drawer hidden>
+  <div class="drawer__overlay" data-drawer-overlay></div>
+  <aside class="drawer__panel" role="dialog" aria-label="{{ 'general.search.search' | t }}">
+    <header class="drawer__header">
+      <form action="{{ routes.search_url }}" method="get" role="search" class="search-form">
+        <input type="search" name="q" placeholder="{{ 'general.search.placeholder' | t }}" aria-label="{{ 'general.search.search' | t }}">
+        <button class="btn btn--primary" type="submit">{{ 'general.search.search' | t }}</button>
+      </form>
+      <button class="drawer__close" data-drawer-close aria-label="{{ 'accessibility.close' | t }}">×</button>
+    </header>
+  </aside>
+</div>
+{% schema %}{ "name":"Search drawer","settings":[] }{% endschema %}
