@@ -1,7 +1,5 @@
-# Alleen paden negeren (lijst van globs)
 ignore:
   - 'node_modules/**'
 
-# Gebruik de aanbevolen regels
 extends:
   - theme-check:recommended
