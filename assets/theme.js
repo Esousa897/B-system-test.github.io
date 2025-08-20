@@ -977,3 +977,784 @@ window.themeUtils = {
     }).format(cents / 100);
   }
 };
+// Product Grid Manager
+class ProductGridManager {
+  constructor() {
+    this.container = document.querySelector('[data-product-grid]');
+    this.grid = document.querySelector('[data-products-grid]');
+    this.loading = document.querySelector('[data-products-loading]');
+    this.filters = document.querySelector('[data-product-filters]');
+    this.sortSelect = document.querySelector('[data-sort-by]');
+    this.viewButtons = document.querySelectorAll('.view-btn');
+    this.loadMoreBtn = document.querySelector('[data-load-more]');
+    
+    this.currentFilters = {};
+    this.currentSort = 'manual';
+    this.currentPage = 1;
+    this.isLoading = false;
+    
+    if (this.container) {
+      this.init();
+    }
+  }
+
+  init() {
+    this.bindEvents();
+    this.initFilters();
+    this.initPriceSlider();
+  }
+
+  bindEvents() {
+    // Filter toggle
+    const filterToggle = document.querySelector('[data-filter-toggle]');
+    const filterOverlay = document.querySelector('[data-filter-overlay]');
+    const filtersClose = document.querySelector('[data-filters-close]');
+    
+    filterToggle?.addEventListener('click', () => this.toggleFilters());
+    filterOverlay?.addEventListener('click', () => this.closeFilters());
+    filtersClose?.addEventListener('click', () => this.closeFilters());
+
+    // Sort change
+    this.sortSelect?.addEventListener('change', (e) => {
+      this.currentSort = e.target.value;
+      this.applyFiltersAndSort();
+    });
+
+    // View toggle
+    this.viewButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const view = btn.dataset.view;
+        this.changeView(view);
+      });
+    });
+
+    // Load more
+    this.loadMoreBtn?.addEventListener('click', () => this.loadMore());
+
+    // Filter changes
+    document.addEventListener('change', (e) => {
+      if (e.target.matches('[data-filter]')) {
+        this.handleFilterChange(e.target);
+      }
+    });
+
+    // Clear filters
+    const clearAllBtn = document.querySelector('[data-clear-all]');
+    clearAllBtn?.addEventListener('click', () => this.clearAllFilters());
+  }
+
+  initFilters() {
+    // Initialize filter state from URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    
+    urlParams.forEach((value, key) => {
+      if (key.startsWith('filter_')) {
+        const filterType = key.replace('filter_', '');
+        this.currentFilters[filterType] = value.split(',');
+      }
+    });
+
+    this.updateActiveFilters();
+  }
+
+  initPriceSlider() {
+    const priceSlider = document.querySelector('[data-price-slider]');
+    if (!priceSlider) return;
+
+    const minRange = priceSlider.querySelector('[data-range-min]');
+    const maxRange = priceSlider.querySelector('[data-range-max]');
+    const minInput = document.querySelector('[data-price-min]');
+    const maxInput = document.querySelector('[data-price-max]');
+    const rangeFill = priceSlider.querySelector('.price-range-fill');
+
+    const updateRangeFill = () => {
+      const minVal = parseInt(minRange.value);
+      const maxVal = parseInt(maxRange.value);
+      const minPercent = (minVal / minRange.max) * 100;
+      const maxPercent = (maxVal / maxRange.max) * 100;
+      
+      rangeFill.style.left = minPercent + '%';
+      rangeFill.style.width = (maxPercent - minPercent) + '%';
+    };
+
+    const updateFilters = window.themeUtils.debounce(() => {
+      const minVal = parseInt(minRange.value);
+      const maxVal = parseInt(maxRange.value);
+      
+      if (minVal > 0 || maxVal < parseInt(maxRange.max)) {
+        this.currentFilters.price = [`${minVal}-${maxVal}`];
+      } else {
+        delete this.currentFilters.price;
+      }
+      
+      this.applyFiltersAndSort();
+    }, 500);
+
+    [minRange, maxRange].forEach(range => {
+      range.addEventListener('input', () => {
+        updateRangeFill();
+        minInput.value = minRange.value;
+        maxInput.value = maxRange.value;
+        updateFilters();
+      });
+    });
+
+    [minInput, maxInput].forEach(input => {
+      input.addEventListener('change', () => {
+        minRange.value = minInput.value || minRange.min;
+        maxRange.value = maxInput.value || maxRange.max;
+        updateRangeFill();
+        updateFilters();
+      });
+    });
+
+    updateRangeFill();
+  }
+
+  handleFilterChange(input) {
+    const filterType = input.dataset.filter;
+    const value = input.value;
+    
+    if (!this.currentFilters[filterType]) {
+      this.currentFilters[filterType] = [];
+    }
+
+    if (input.checked) {
+      if (!this.currentFilters[filterType].includes(value)) {
+        this.currentFilters[filterType].push(value);
+      }
+    } else {
+      this.currentFilters[filterType] = this.currentFilters[filterType].filter(v => v !== value);
+      if (this.currentFilters[filterType].length === 0) {
+        delete this.currentFilters[filterType];
+      }
+    }
+
+    this.applyFiltersAndSort();
+  }
+
+  async applyFiltersAndSort() {
+    if (this.isLoading) return;
+    
+    this.isLoading = true;
+    this.showLoading();
+    
+    try {
+      const params = new URLSearchParams();
+      
+      // Add filters to params
+      Object.entries(this.currentFilters).forEach(([key, values]) => {
+        if (values.length > 0) {
+          params.append(`filter_${key}`, values.join(','));
+        }
+      });
+      
+      // Add sort
+      if (this.currentSort !== 'manual') {
+        params.append('sort_by', this.currentSort);
+      }
+      
+      // Fetch filtered products
+      const response = await fetch(`${window.location.pathname}?${params.toString()}&section_id=product-grid`);
+      const html = await response.text();
+      
+      // Parse and update grid
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      const newGrid = doc.querySelector('[data-products-grid]');
+      
+      if (newGrid) {
+        this.grid.innerHTML = newGrid.innerHTML;
+      }
+      
+      // Update URL without page reload
+      const newUrl = `${window.location.pathname}?${params.toString()}`;
+      window.history.replaceState({}, '', newUrl);
+      
+      this.updateActiveFilters();
+      
+    } catch (error) {
+      console.error('Failed to apply filters:', error);
+      window.theme.showNotification('Kon filters niet toepassen', 'error');
+    } finally {
+      this.hideLoading();
+      this.isLoading = false;
+    }
+  }
+
+  updateActiveFilters() {
+    const activeFiltersContainer = document.querySelector('[data-active-filters]');
+    const activeFiltersList = document.querySelector('[data-active-filters-list]');
+    const filterCount = document.querySelector('[data-filter-count]');
+    
+    if (!activeFiltersList) return;
+    
+    activeFiltersList.innerHTML = '';
+    let totalFilters = 0;
+    
+    Object.entries(this.currentFilters).forEach(([type, values]) => {
+      values.forEach(value => {
+        totalFilters++;
+        const tag = document.createElement('span');
+        tag.className = 'active-filter-tag';
+        tag.innerHTML = `
+          ${this.getFilterDisplayName(type, value)}
+          <button data-remove-filter="${type}" data-filter-value="${value}">×</button>
+        `;
+        activeFiltersList.appendChild(tag);
+      });
+    });
+    
+    // Show/hide active filters
+    activeFiltersContainer?.classList.toggle('hidden', totalFilters === 0);
+    
+    // Update filter count
+    if (filterCount) {
+      filterCount.textContent = totalFilters;
+      filterCount.classList.toggle('hidden', totalFilters === 0);
+    }
+    
+    // Bind remove filter events
+    activeFiltersList.querySelectorAll('[data-remove-filter]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const filterType = btn.dataset.removeFilter;
+        const filterValue = btn.dataset.filterValue;
+        this.removeFilter(filterType, filterValue);
+      });
+    });
+  }
+
+  removeFilter(type, value) {
+    if (this.currentFilters[type]) {
+      this.currentFilters[type] = this.currentFilters[type].filter(v => v !== value);
+      if (this.currentFilters[type].length === 0) {
+        delete this.currentFilters[type];
+      }
+    }
+    
+    // Update UI
+    const checkbox = document.querySelector(`[data-filter="${type}"][value="${value}"]`);
+    if (checkbox) {
+      checkbox.checked = false;
+    }
+    
+    this.applyFiltersAndSort();
+  }
+
+  clearAllFilters() {
+    this.currentFilters = {};
+    
+    // Clear all checkboxes
+    document.querySelectorAll('[data-filter]').forEach(input => {
+      input.checked = false;
+    });
+    
+    // Reset price slider
+    const minRange = document.querySelector('[data-range-min]');
+    const maxRange = document.querySelector('[data-range-max]');
+    const minInput = document.querySelector('[data-price-min]');
+    const maxInput = document.querySelector('[data-price-max]');
+    
+    if (minRange && maxRange) {
+      minRange.value = minRange.min;
+      maxRange.value = maxRange.max;
+      minInput.value = '';
+      maxInput.value = '';
+    }
+    
+    this.applyFiltersAndSort();
+  }
+
+  getFilterDisplayName(type, value) {
+    const displayNames = {
+      size: value.toUpperCase(),
+      color: value.charAt(0).toUpperCase() + value.slice(1),
+      brand: value.charAt(0).toUpperCase() + value.slice(1),
+      availability: value === 'in-stock' ? 'Op voorraad' : 'Uitverkocht',
+      price: `€${value.replace('-', ' - €')}`
+    };
+    
+    return displayNames[type] || value;
+  }
+
+  changeView(view) {
+    this.viewButtons.forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.view === view);
+    });
+    
+    this.grid.dataset.view = view;
+    localStorage.setItem('productGridView', view);
+  }
+
+  async loadMore() {
+    if (this.isLoading) return;
+    
+    this.isLoading = true;
+    this.loadMoreBtn.textContent = 'Laden...';
+    this.loadMoreBtn.disabled = true;
+    
+    try {
+      this.currentPage++;
+      const params = new URLSearchParams(window.location.search);
+      params.set('page', this.currentPage);
+      
+      const response = await fetch(`${window.location.pathname}?${params.toString()}&section_id=product-grid`);
+      const html = await response.text();
+      
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(html, 'text/html');
+      const newProducts = doc.querySelectorAll('.product-card');
+      
+      newProducts.forEach(product => {
+        this.grid.appendChild(product);
+      });
+      
+      // Check if there are more products
+      const hasMore = doc.querySelector('[data-load-more]');
+      if (!hasMore) {
+        this.loadMoreBtn.style.display = 'none';
+      }
+      
+    } catch (error) {
+      console.error('Failed to load more products:', error);
+      this.currentPage--;
+    } finally {
+      this.loadMoreBtn.textContent = 'Meer laden';
+      this.loadMoreBtn.disabled = false;
+      this.isLoading = false;
+    }
+  }
+
+  toggleFilters() {
+    this.filters?.classList.toggle('open');
+    const overlay = document.querySelector('[data-filter-overlay]');
+    overlay?.classList.toggle('hidden');
+    document.body.classList.toggle('filters-open');
+  }
+
+  closeFilters() {
+    this.filters?.classList.remove('open');
+    const overlay = document.querySelector('[data-filter-overlay]');
+    overlay?.classList.add('hidden');
+    document.body.classList.remove('filters-open');
+  }
+
+  showLoading() {
+    this.loading?.classList.remove('hidden');
+    this.grid?.classList.add('loading');
+  }
+
+  hideLoading() {
+    this.loading?.classList.add('hidden');
+    this.grid?.classList.remove('loading');
+  }
+}
+
+// Wishlist Manager
+class WishlistManager {
+  constructor() {
+    this.wishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+    this.init();
+  }
+
+  init() {
+    this.bindEvents();
+    this.updateWishlistUI();
+  }
+
+  bindEvents() {
+    document.addEventListener('click', (e) => {
+      if (e.target.matches('[data-wishlist-toggle]') || e.target.closest('[data-wishlist-toggle]')) {
+        e.preventDefault();
+        const btn = e.target.closest('[data-wishlist-toggle]');
+        const productId = btn.dataset.productId;
+        this.toggleWishlist(productId, btn);
+      }
+    });
+  }
+
+  toggleWishlist(productId, button) {
+    const isInWishlist = this.wishlist.includes(productId);
+    
+    if (isInWishlist) {
+      this.removeFromWishlist(productId);
+      button.classList.remove('active');
+      window.theme.showNotification('Verwijderd van verlanglijst', 'info');
+    } else {
+      this.addToWishlist(productId);
+      button.classList.add('active');
+      window.theme.showNotification('Toegevoegd aan verlanglijst', 'success');
+    }
+    
+    this.updateWishlistCount();
+  }
+
+  addToWishlist(productId) {
+    if (!this.wishlist.includes(productId)) {
+      this.wishlist.push(productId);
+      this.saveWishlist();
+    }
+  }
+
+  removeFromWishlist(productId) {
+    this.wishlist = this.wishlist.filter(id => id !== productId);
+    this.saveWishlist();
+  }
+
+  saveWishlist() {
+    localStorage.setItem('wishlist', JSON.stringify(this.wishlist));
+  }
+
+  updateWishlistUI() {
+    document.querySelectorAll('[data-wishlist-toggle]').forEach(btn => {
+      const productId = btn.dataset.productId;
+      btn.classList.toggle('active', this.wishlist.includes(productId));
+    });
+    
+    this.updateWishlistCount();
+  }
+
+  updateWishlistCount() {
+    const count = this.wishlist.length;
+    document.querySelectorAll('[data-wishlist-count]').forEach(element => {
+      element.textContent = count;
+      element.style.display = count > 0 ? 'block' : 'none';
+    });
+  }
+
+  getWishlist() {
+    return this.wishlist;
+  }
+}
+
+// Quick View Manager
+class QuickViewManager {
+  constructor() {
+    this.modal = null;
+    this.init();
+  }
+
+  init() {
+    this.bindEvents();
+    this.createModal();
+  }
+
+  bindEvents() {
+    document.addEventListener('click', (e) => {
+      if (e.target.matches('[data-quick-view]') || e.target.closest('[data-quick-view]')) {
+        e.preventDefault();
+        const btn = e.target.closest('[data-quick-view]');
+        const productHandle = btn.dataset.productHandle;
+        this.openQuickView(productHandle);
+      }
+    });
+  }
+
+  createModal() {
+    this.modal = document.createElement('div');
+    this.modal.className = 'quick-view-modal';
+    this.modal.innerHTML = `
+      <div class="quick-view-overlay" data-quick-view-close></div>
+      <div class="quick-view-content">
+        <button class="quick-view-close" data-quick-view-close>
+          <svg width="20" height="20" viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2"/>
+            <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2"/>
+          </svg>
+        </button>
+        <div class="quick-view-body">
+          <div class="quick-view-loading">
+            <div class="loading-spinner"></div>
+            <p>Product laden...</p>
+          </div>
+        </div>
+      </div>
+    `;
+    
+    document.body.appendChild(this.modal);
+    
+    // Bind close events
+    this.modal.querySelectorAll('[data-quick-view-close]').forEach(btn => {
+      btn.addEventListener('click', () => this.closeQuickView());
+    });
+    
+    // Close on escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.modal.classList.contains('open')) {
+        this.closeQuickView();
+      }
+    });
+  }
+
+  async openQuickView(productHandle) {
+    this.modal.classList.add('open');
+    document.body.classList.add('quick-view-open');
+    
+    const loading = this.modal.querySelector('.quick-view-loading');
+    const body = this.modal.querySelector('.quick-view-body');
+    
+    loading.style.display = 'block';
+    
+    try {
+      const response = await fetch(`/products/${productHandle}?view=quick-view`);
+      const html = await response.text();
+      
+      body.innerHTML = html;
+      
+      // Initialize product form
+      this.initProductForm();
+      
+    } catch (error) {
+      console.error('Failed to load quick view:', error);
+      body.innerHTML = '<p>Kon product niet laden</p>';
+    }
+  }
+
+  closeQuickView() {
+    this.modal.classList.remove('open');
+    document.body.classList.remove('quick-view-open');
+  }
+
+  initProductForm() {
+    const form = this.modal.querySelector('[data-product-form]');
+    if (!form) return;
+    
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const formData = new FormData(form);
+      const submitBtn = form.querySelector('[type="submit"]');
+      const originalText = submitBtn.textContent;
+      
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Toevoegen...';
+      
+      try {
+        const response = await fetch('/cart/add.js', {
+          method: 'POST',
+          body: formData
+        });
+        
+        if (response.ok) {
+          const item = await response.json();
+          window.theme.cart.refreshCart();
+          window.theme.cart.openDrawer();
+          this.closeQuickView();
+          window.theme.showNotification(`${item.product_title} toegevoegd aan winkelwagen`, 'success');
+        } else {
+          throw new Error('Product kon niet worden toegevoegd');
+        }
+      } catch (error) {
+        window.theme.showNotification(error.message, 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    });
+    
+    // Handle variant selection
+    const variantSelects = form.querySelectorAll('[data-variant-select]');
+    variantSelects.forEach(select => {
+      select.addEventListener('change', () => this.updateVariant(form));
+    });
+  }
+
+  updateVariant(form) {
+    const selects = form.querySelectorAll('[data-variant-select]');
+    const selectedOptions = Array.from(selects).map(select => select.value);
+    
+    // Find matching variant
+    const variants = JSON.parse(form.dataset.variants || '[]');
+    const matchingVariant = variants.find(variant => 
+      variant.options.every((option, index) => option === selectedOptions[index])
+    );
+    
+    if (matchingVariant) {
+      // Update price
+      const priceElement = form.querySelector('[data-product-price]');
+      if (priceElement) {
+        priceElement.textContent = window.themeUtils.formatMoney(matchingVariant.price);
+      }
+      
+      // Update availability
+      const submitBtn = form.querySelector('[type="submit"]');
+      const variantIdInput = form.querySelector('[name="id"]');
+      
+      if (matchingVariant.available) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Toevoegen aan winkelwagen';
+        variantIdInput.value = matchingVariant.id;
+      } else {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Uitverkocht';
+      }
+    }
+  }
+}
+
+// Newsletter Manager
+class NewsletterManager {
+  constructor() {
+    this.init();
+  }
+
+  init() {
+    this.bindEvents();
+  }
+
+  bindEvents() {
+    document.addEventListener('submit', (e) => {
+      if (e.target.matches('[data-newsletter-form]')) {
+        e.preventDefault();
+        this.handleSubmit(e.target);
+      }
+    });
+  }
+
+  async handleSubmit(form) {
+    const submitBtn = form.querySelector('[type="submit"]');
+    const submitText = submitBtn.querySelector('.submit-text');
+    const submitLoading = submitBtn.querySelector('.submit-loading');
+    const messageContainer = form.querySelector('[data-newsletter-message]');
+    
+    // Show loading state
+    submitText.classList.add('hidden');
+    submitLoading.classList.remove('hidden');
+    submitBtn.disabled = true;
+    
+    try {
+      const formData = new FormData(form);
+      const response = await fetch(form.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        this.showMessage(messageContainer, 'Bedankt voor je aanmelding!', 'success');
+        form.reset();
+      } else {
+        throw new Error('Aanmelding mislukt');
+      }
+    } catch (error) {
+      this.showMessage(messageContainer, 'Er is een fout opgetreden. Probeer het opnieuw.', 'error');
+    } finally {
+      // Reset button state
+      submitText.classList.remove('hidden');
+      submitLoading.classList.add('hidden');
+      submitBtn.disabled = false;
+    }
+  }
+
+  showMessage(container, message, type) {
+    if (!container) return;
+    
+    container.textContent = message;
+    container.className = `newsletter-message newsletter-message--${type}`;
+    container.classList.remove('hidden');
+    
+    setTimeout(() => {
+      container.classList.add('hidden');
+    }, 5000);
+  }
+}
+
+// Compare Manager
+class CompareManager {
+  constructor() {
+    this.compareList = JSON.parse(localStorage.getItem('compareList') || '[]');
+    this.maxItems = 4;
+    this.init();
+  }
+
+  init() {
+    this.bindEvents();
+    this.updateCompareUI();
+  }
+
+  bindEvents() {
+    document.addEventListener('click', (e) => {
+      if (e.target.matches('[data-compare-toggle]') || e.target.closest('[data-compare-toggle]')) {
+        e.preventDefault();
+        const btn = e.target.closest('[data-compare-toggle]');
+        const productId = btn.dataset.productId;
+        this.toggleCompare(productId, btn);
+      }
+    });
+  }
+
+  toggleCompare(productId, button) {
+    const isInCompare = this.compareList.includes(productId);
+    
+    if (isInCompare) {
+      this.removeFromCompare(productId);
+      button.classList.remove('active');
+      window.theme.showNotification('Verwijderd van vergelijken', 'info');
+    } else {
+      if (this.compareList.length >= this.maxItems) {
+        window.theme.showNotification(`Je kunt maximaal ${this.maxItems} producten vergelijken`, 'warning');
+        return;
+      }
+      
+      this.addToCompare(productId);
+      button.classList.add('active');
+      window.theme.showNotification('Toegevoegd aan vergelijken', 'success');
+    }
+    
+    this.updateCompareCount();
+  }
+
+  addToCompare(productId) {
+    if (!this.compareList.includes(productId) && this.compareList.length < this.maxItems) {
+      this.compareList.push(productId);
+      this.saveCompareList();
+    }
+  }
+
+  removeFromCompare(productId) {
+    this.compareList = this.compareList.filter(id => id !== productId);
+    this.saveCompareList();
+  }
+
+  saveCompareList() {
+    localStorage.setItem('compareList', JSON.stringify(this.compareList));
+  }
+
+  updateCompareUI() {
+    document.querySelectorAll('[data-compare-toggle]').forEach(btn => {
+      const productId = btn.dataset.productId;
+      btn.classList.toggle('active', this.compareList.includes(productId));
+    });
+    
+    this.updateCompareCount();
+  }
+
+  updateCompareCount() {
+    const count = this.compareList.length;
+    document.querySelectorAll('[data-compare-count]').forEach(element => {
+      element.textContent = count;
+      element.style.display = count > 0 ? 'block' : 'none';
+    });
+  }
+
+  getCompareList() {
+    return this.compareList;
+  }
+}
+
+// Add managers to main theme class
+const originalInit = ThemeManager.prototype.init;
+ThemeManager.prototype.init = function() {
+  originalInit.call(this);
+  
+  // Add new managers
+  this.compare = new CompareManager();
+  
+  // Initialize saved view preference
+  const savedView = localStorage.getItem('productGridView');
+  if (savedView && this.productGrid) {
+    this.productGrid.changeView(savedView);
+  }
+};
