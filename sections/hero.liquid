@@ -17,3 +17,280 @@
   { "type":"url","id":"secondary_link","label":"Secondary link" },
   { "type":"text","id":"secondary_label","label":"Secondary label","default":"Bekijk Lookbook" }
 ]}{% endschema %}
+{% comment %} Geavanceerde Hero met parallax, video backgrounds, en interactieve elementen {% endcomment %}
+<section class="hero-section" 
+         data-hero 
+         data-parallax="{{ section.settings.enable_parallax }}"
+         data-autoplay="{{ section.settings.autoplay_slides }}">
+  
+  <div class="hero-container">
+    {% if section.blocks.size > 1 %}
+      <!-- Multi-slide Hero -->
+      <div class="hero-slider" data-hero-slider>
+        <div class="hero-slides" data-hero-slides>
+          {% for block in section.blocks %}
+            <div class="hero-slide" 
+                 data-slide="{{ forloop.index0 }}"
+                 data-bg-type="{{ block.settings.background_type }}"
+                 {{ block.shopify_attributes }}>
+              
+              {% render 'hero-slide-content', block: block, section: section %}
+            </div>
+          {% endfor %}
+        </div>
+
+        <!-- Slider Controls -->
+        {% if section.blocks.size > 1 %}
+          <div class="hero-controls">
+            <button class="hero-nav hero-prev" data-hero-prev aria-label="Vorige slide">
+              <svg width="24" height="24" viewBox="0 0 24 24">
+                <polyline points="15,18 9,12 15,6" fill="none" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </button>
+            <button class="hero-nav hero-next" data-hero-next aria-label="Volgende slide">
+              <svg width="24" height="24" viewBox="0 0 24 24">
+                <polyline points="9,18 15,12 9,6" fill="none" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </button>
+          </div>
+
+          <!-- Slide Indicators -->
+          <div class="hero-indicators" data-hero-indicators>
+            {% for block in section.blocks %}
+              <button class="hero-indicator {% if forloop.first %}active{% endif %}" 
+                      data-slide-to="{{ forloop.index0 }}"
+                      aria-label="Ga naar slide {{ forloop.index }}"></button>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    {% else %}
+      <!-- Single Hero -->
+      {% for block in section.blocks %}
+        <div class="hero-single" {{ block.shopify_attributes }}>
+          {% render 'hero-slide-content', block: block, section: section %}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <!-- Scroll Indicator -->
+    {% if section.settings.show_scroll_indicator %}
+      <div class="scroll-indicator" data-scroll-indicator>
+        <div class="scroll-text">Scroll</div>
+        <div class="scroll-arrow">
+          <svg width="16" height="24" viewBox="0 0 16 24">
+            <path d="M8 0v22M1 15l7 7 7-7" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          </svg>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Background Elements -->
+  <div class="hero-background-elements">
+    {% if section.settings.show_floating_elements %}
+      <div class="floating-element floating-element--1"></div>
+      <div class="floating-element floating-element--2"></div>
+      <div class="floating-element floating-element--3"></div>
+    {% endif %}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Hero",
+  "tag": "section",
+  "class": "section-hero",
+  "max_blocks": 5,
+  "settings": [
+    {
+      "type": "header",
+      "content": "Algemene instellingen"
+    },
+    {
+      "type": "select",
+      "id": "height",
+      "label": "Sectie hoogte",
+      "options": [
+        {"value": "small", "label": "Klein (400px)"},
+        {"value": "medium", "label": "Gemiddeld (600px)"},
+        {"value": "large", "label": "Groot (800px)"},
+        {"value": "full", "label": "Volledig scherm"}
+      ],
+      "default": "large"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_parallax",
+      "label": "Parallax effect inschakelen",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "autoplay_slides",
+      "label": "Automatisch afspelen slides",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "autoplay_speed",
+      "min": 3,
+      "max": 10,
+      "step": 1,
+      "unit": "s",
+      "label": "Autoplay snelheid",
+      "default": 5
+    },
+    {
+      "type": "checkbox",
+      "id": "show_scroll_indicator",
+      "label": "Toon scroll indicator",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_floating_elements",
+      "label": "Toon zwevende elementen",
+      "default": false
+    }
+  ],
+  "blocks": [
+    {
+      "type": "slide",
+      "name": "Slide",
+      "settings": [
+        {
+          "type": "header",
+          "content": "Achtergrond"
+        },
+        {
+          "type": "select",
+          "id": "background_type",
+          "label": "Achtergrond type",
+          "options": [
+            {"value": "image", "label": "Afbeelding"},
+            {"value": "video", "label": "Video"},
+            {"value": "gradient", "label": "Gradient"}
+          ],
+          "default": "image"
+        },
+        {
+          "type": "image_picker",
+          "id": "background_image",
+          "label": "Achtergrond afbeelding"
+        },
+        {
+          "type": "image_picker",
+          "id": "background_image_mobile",
+          "label": "Mobiele achtergrond afbeelding"
+        },
+        {
+          "type": "video",
+          "id": "background_video",
+          "label": "Achtergrond video"
+        },
+        {
+          "type": "color_background",
+          "id": "background_gradient",
+          "label": "Achtergrond gradient"
+        },
+        {
+          "type": "range",
+          "id": "background_overlay_opacity",
+          "min": 0,
+          "max": 100,
+          "step": 5,
+          "unit": "%",
+          "label": "Overlay transparantie",
+          "default": 30
+        },
+        {
+          "type": "header",
+          "content": "Inhoud"
+        },
+        {
+          "type": "text",
+          "id": "subtitle",
+          "label": "Subtitel"
+        },
+        {
+          "type": "textarea",
+          "id": "title",
+          "label": "Titel",
+          "default": "Ontdek onze nieuwe collectie"
+        },
+        {
+          "type": "richtext",
+          "id": "description",
+          "label": "Beschrijving"
+        },
+        {
+          "type": "text",
+          "id": "button_text",
+          "label": "Knop tekst",
+          "default": "Shop nu"
+        },
+        {
+          "type": "url",
+          "id": "button_link",
+          "label": "Knop link"
+        },
+        {
+          "type": "text",
+          "id": "button_text_secondary",
+          "label": "Tweede knop tekst"
+        },
+        {
+          "type": "url",
+          "id": "button_link_secondary",
+          "label": "Tweede knop link"
+        },
+        {
+          "type": "select",
+          "id": "text_alignment",
+          "label": "Tekst uitlijning",
+          "options": [
+            {"value": "left", "label": "Links"},
+            {"value": "center", "label": "Gecentreerd"},
+            {"value": "right", "label": "Rechts"}
+          ],
+          "default": "center"
+        },
+        {
+          "type": "select",
+          "id": "content_position",
+          "label": "Inhoud positie",
+          "options": [
+            {"value": "top-left", "label": "Linksboven"},
+            {"value": "top-center", "label": "Middenboven"},
+            {"value": "top-right", "label": "Rechtsboven"},
+            {"value": "center-left", "label": "Links midden"},
+            {"value": "center-center", "label": "Gecentreerd"},
+            {"value": "center-right", "label": "Rechts midden"},
+            {"value": "bottom-left", "label": "Linksonder"},
+            {"value": "bottom-center", "label": "Middenonder"},
+            {"value": "bottom-right", "label": "Rechtsonder"}
+          ],
+          "default": "center-center"
+        },
+        {
+          "type": "color",
+          "id": "text_color",
+          "label": "Tekst kleur",
+          "default": "#ffffff"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Hero",
+      "blocks": [
+        {
+          "type": "slide"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
