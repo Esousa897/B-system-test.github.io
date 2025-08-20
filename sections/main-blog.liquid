@@ -7,3 +7,70 @@
   </ul>
 </section>
 {% schema %}{ "name":"Main blog","settings":[] }{% endschema %}
+{% comment %} Geavanceerde Product Card met hover effects, quick view, en wishlist {% endcomment %}
+<div class="product-card" 
+     data-product-id="{{ product.id }}"
+     data-product-available="{{ product.available }}"
+     data-aos="fade-up"
+     data-aos-delay="{{ forloop.index | times: 50 }}">
+  
+  <!-- Product Images -->
+  <div class="product-card__media">
+    <a href="{{ product.url }}" class="product-card__link" aria-label="{{ product.title | escape }}">
+      <!-- Main Image -->
+      <div class="product-card__image product-card__image--primary">
+        {% if product.featured_media %}
+          <img src="{{ product.featured_media | image_url: width: 400 }}"
+               srcset="{{ product.featured_media | image_url: width: 200 }} 200w,
+                       {{ product.featured_media | image_url: width: 400 }} 400w,
+                       {{ product.featured_media | image_url: width: 600 }} 600w"
+               sizes="(max-width: 768px) 50vw, (max-width: 1200px) 33vw, 25vw"
+               alt="{{ product.featured_media.alt | escape }}"
+               width="400"
+               height="500"
+               loading="lazy">
+        {% else %}
+          {{ 'product-1' | placeholder_svg_tag: 'product-card__placeholder' }}
+        {% endif %}
+      </div>
+
+      <!-- Hover Image -->
+      {% if product.media.size > 1 %}
+        <div class="product-card__image product-card__image--secondary">
+          <img src="{{ product.media[1] | image_url: width: 400 }}"
+               alt="{{ product.media[1].alt | escape }}"
+               width="400"
+               height="500"
+               loading="lazy">
+        </div>
+      {% endif %}
+    </a>
+
+    <!-- Product Badges -->
+    <div class="product-card__badges">
+      {% if product.compare_at_price > product.price %}
+        {% assign discount_percentage = product.compare_at_price | minus: product.price | times: 100 | divided_by: product.compare_at_price %}
+        <span class="product-badge product-badge--sale">-{{ discount_percentage }}%</span>
+      {% endif %}
+      
+      {% unless product.available %}
+        <span class="product-badge product-badge--sold-out">Uitverkocht</span>
+      {% endunless %}
+      
+      {% if product.tags contains 'new' %}
+        <span class="product-badge product-badge--new">Nieuw</span>
+      {% endif %}
+      
+      {% if product.tags contains 'bestseller' %}
+        <span class="product-badge product-badge--bestseller">Bestseller</span>
+      {% endif %}
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="product-card__actions">
+      <!-- Wishlist -->
+      <button class="product-action wishlist-btn" 
+              data-wishlist-toggle 
+              data-product-id="{{ product.id }}"
+              aria-label="Toevoegen aan verlanglijst">
+        <svg class="icon-heart" width="20" height="20" viewBox="0
