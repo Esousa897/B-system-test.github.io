@@ -18,3 +18,179 @@
   {% endif %}
 </section>
 {% schema %}{ "name":"Main search","settings": [] }{% endschema %}
+{% comment %} Geavanceerde Search Drawer met instant search, filters, en suggestions {% endcomment %}
+<div class="drawer search-drawer" data-search-drawer hidden>
+  <div class="drawer__overlay" data-drawer-overlay></div>
+  <div class="drawer__content">
+    <!-- Header -->
+    <div class="drawer__header">
+      <h2 class="drawer__title">Zoeken</h2>
+      <button class="drawer__close" data-drawer-close aria-label="Sluiten">
+        <svg width="20" height="20" viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2"/>
+          <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Search Form -->
+    <div class="search-form-container">
+      <form class="search-form" data-search-form action="{{ routes.search_url }}" method="get">
+        <div class="search-input-wrapper">
+          <input 
+            type="search" 
+            name="q" 
+            class="search-input" 
+            placeholder="Zoek naar producten, merken..." 
+            value="{{ search.terms | escape }}"
+            data-search-input
+            autocomplete="off"
+            spellcheck="false">
+          <button type="submit" class="search-submit" aria-label="Zoeken">
+            <svg width="20" height="20" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8" fill="none" stroke="currentColor" stroke-width="2"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </button>
+          <button type="button" class="search-clear" data-search-clear hidden aria-label="Wissen">
+            <svg width="16" height="16" viewBox="0 0 24 24">
+              <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2"/>
+              <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Search Body -->
+    <div class="drawer__body">
+      <!-- Loading State -->
+      <div class="search-loading" data-search-loading hidden>
+        <div class="loading-spinner"></div>
+        <p>Zoeken...</p>
+      </div>
+
+      <!-- Popular Searches -->
+      <div class="search-popular" data-search-popular>
+        <h4>Populaire zoekopdrachten</h4>
+        <div class="popular-tags">
+          {% for tag in section.settings.popular_searches %}
+            <button class="popular-tag" data-popular-search="{{ tag }}">{{ tag }}</button>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Search Results -->
+      <div class="search-results" data-search-results hidden>
+        <!-- Quick Results -->
+        <div class="quick-results" data-quick-results>
+          <div class="result-section">
+            <h4>Producten</h4>
+            <div class="product-results" data-product-results></div>
+          </div>
+          
+          <div class="result-section">
+            <h4>Collecties</h4>
+            <div class="collection-results" data-collection-results></div>
+          </div>
+          
+          <div class="result-section">
+            <h4>Pagina's</h4>
+            <div class="page-results" data-page-results></div>
+          </div>
+        </div>
+
+        <!-- View All Results -->
+        <div class="view-all-results">
+          <a href="#" class="button button--secondary" data-view-all-link>
+            Alle resultaten bekijken
+          </a>
+        </div>
+      </div>
+
+      <!-- No Results -->
+      <div class="search-no-results" data-search-no-results hidden>
+        <div class="no-results-content">
+          <svg class="no-results-icon" width="48" height="48" viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" stroke-width="1.5"/>
+          </svg>
+          <h4>Geen resultaten gevonden</h4>
+          <p>Probeer andere zoektermen of bekijk onze populaire producten</p>
+        </div>
+      </div>
+
+      <!-- Recent Searches -->
+      <div class="recent-searches" data-recent-searches hidden>
+        <div class="recent-header">
+          <h4>Recente zoekopdrachten</h4>
+          <button class="clear-recent" data-clear-recent>Wissen</button>
+        </div>
+        <ul class="recent-list" data-recent-list></ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Search Results Template -->
+<template id="search-product-template">
+  <div class="search-result-item product-result">
+    <a href="#" class="result-link">
+      <div class="result-image">
+        <img src="" alt="" width="60" height="60" loading="lazy">
+      </div>
+      <div class="result-content">
+        <h5 class="result-title"></h5>
+        <p class="result-price"></p>
+        <div class="result-badges"></div>
+      </div>
+    </a>
+  </div>
+</template>
+
+<template id="search-collection-template">
+  <div class="search-result-item collection-result">
+    <a href="#" class="result-link">
+      <div class="result-content">
+        <h5 class="result-title"></h5>
+        <p class="result-count"></p>
+      </div>
+    </a>
+  </div>
+</template>
+
+{% schema %}
+{
+  "name": "Search Drawer",
+  "tag": "aside",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "enable_instant_search",
+      "label": "Schakel instant search in",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "search_results_limit",
+      "min": 3,
+      "max": 12,
+      "step": 1,
+      "label": "Aantal zoekresultaten",
+      "default": 6
+    },
+    {
+      "type": "textarea",
+      "id": "popular_searches",
+      "label": "Populaire zoekopdrachten (één per regel)",
+      "default": "Jurken\nTops\nJeans\nSchoenen\nAccessoires"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_recent_searches",
+      "label": "Toon recente zoekopdrachten",
+      "default": true
+    }
+  ]
+}
+{% endschema %}
