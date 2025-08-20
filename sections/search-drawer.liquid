@@ -1,13 +1,104 @@
-<div class="drawer" data-search-drawer hidden>
-  <div class="drawer__overlay" data-drawer-overlay></div>
-  <aside class="drawer__panel" role="dialog" aria-label="{{ 'general.search.search' | t }}">
-    <header class="drawer__header">
-      <form action="{{ routes.search_url }}" method="get" role="search" class="search-form">
-        <input type="search" name="q" placeholder="{{ 'general.search.placeholder' | t }}" aria-label="{{ 'general.search.search' | t }}">
-        <button class="btn btn--primary" type="submit">{{ 'general.search.search' | t }}</button>
+{%- comment -%}
+  Search Drawer (Liquid + minimal JS)
+  Lightweight drawer that works in Shopify theme editor + local dev.
+{%- endcomment -%}
+
+<div id="search-drawer" class="search-drawer" aria-hidden="true" data-drawer>
+  <div class="search-drawer__backdrop" data-drawer-backdrop></div>
+
+  <aside class="search-drawer__panel" role="dialog" aria-label="{{ 'general.search' | t: default: 'Search' }}">
+    <header class="search-drawer__header">
+      <form id="search-form" action="{{ routes.search_url }}" method="get" role="search" class="search-form">
+        <input id="search-input" name="q" type="search" placeholder="{{ 'general.search.placeholder' | t: default: 'Search products, categories…' }}" aria-label="Search" />
+        <button type="submit" class="search-form__submit">{{ 'general.search.submit' | t: default: 'Search' }}</button>
       </form>
-      <button class="drawer__close" data-drawer-close aria-label="{{ 'accessibility.close' | t }}">×</button>
+      <button id="search-close" class="search-drawer__close" aria-label="{{ 'general.close' | t: default: 'Close' }}">✕</button>
     </header>
+
+    <div class="search-drawer__content">
+      <div id="search-suggestions" class="search-suggestions" aria-live="polite">
+        <!-- mock suggestions (will be replaced by real search integration) -->
+        <p class="muted">{{ 'general.search.hint' | t: default: 'Try: blazer zwart, midi jurk' }}</p>
+        <ul id="suggestion-list" class="suggestion-list" aria-hidden="false">
+          <li><button class="suggestion-item" data-suggestion="blazer zwart">blazer zwart</button></li>
+          <li><button class="suggestion-item" data-suggestion="midi jurk">midi jurk</button></li>
+          <li><button class="suggestion-item" data-suggestion="wide leg broek">wide leg broek</button></li>
+        </ul>
+      </div>
+
+      <div id="search-results" class="search-results" hidden>
+        <p class="muted" id="results-meta">{{ 'general.search.results_with_count' | t: terms: '', count: 0 }}</p>
+        <div id="results-list"></div>
+      </div>
+    </div>
   </aside>
 </div>
-{% schema %}{ "name":"Search drawer","settings":[] }{% endschema %}
+
+<style>
+/* minimal styles so theme-check / editor can render something */
+.search-drawer { position: fixed; inset:0; z-index: 4000; pointer-events: none; }
+.search-drawer__backdrop { position: absolute; inset:0; background: rgba(0,0,0,0.4); opacity:0; transition:opacity .2s; }
+.search-drawer__panel { position: absolute; right: 0; top: 0; bottom: 0; width: 420px; background: #fff; transform: translateX(110%); transition: transform .28s; box-shadow: -8px 0 30px rgba(0,0,0,0.12); pointer-events: auto; }
+.search-drawer.open .search-drawer__backdrop { opacity: 1; }
+.search-drawer.open .search-drawer__panel { transform: translateX(0%); }
+.search-form { display:flex; gap:.5rem; padding:1rem; }
+.search-form input { flex:1; padding:.65rem .75rem; border:1px solid #ddd; border-radius:6px; }
+.search-form__submit { padding:.6rem .8rem; }
+.suggestion-list { list-style:none; padding:1rem; margin:0; display:grid; gap:.35rem; }
+.suggestion-item { border:1px solid #eee; padding:.5rem .75rem; background:transparent; text-align:left; width:100%; }
+.muted { color:#666; padding: .75rem 1rem; }
+</style>
+
+<script>
+(function(){
+  var drawer = document.getElementById('search-drawer');
+  var openEvent = function(){};
+  var closeBtn = document.getElementById('search-close');
+  var backdrop = drawer.querySelector('[data-drawer-backdrop]');
+  var suggestionButtons = drawer.querySelectorAll('.suggestion-item');
+  var form = document.getElementById('search-form');
+  var input = document.getElementById('search-input');
+
+  function openDrawer() {
+    drawer.classList.add('open');
+    drawer.setAttribute('aria-hidden','false');
+    setTimeout(function(){ input && input.focus(); }, 120);
+  }
+  function closeDrawer() {
+    drawer.classList.remove('open');
+    drawer.setAttribute('aria-hidden','true');
+  }
+
+  // hookup example: data attribute triggers anywhere in theme:
+  document.querySelectorAll('[data-open-search], .open-search').forEach(function(btn){
+    btn.addEventListener('click', function(ev){ ev.preventDefault(); openDrawer(); });
+  });
+
+  closeBtn && closeBtn.addEventListener('click', function(e){ e.preventDefault(); closeDrawer(); });
+  backdrop && backdrop.addEventListener('click', function(){ closeDrawer(); });
+
+  suggestionButtons.forEach(function(b){
+    b.addEventListener('click', function(e){
+      e.preventDefault();
+      var q = this.getAttribute('data-suggestion') || '';
+      if(!q) return;
+      if(input) input.value = q;
+      form && form.submit();
+    });
+  });
+
+  // ESC to close
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape'){ closeDrawer(); }});
+})();
+</script>
+
+{%- schema -%}
+{
+  "name": "Search drawer",
+  "settings": [],
+  "blocks": [],
+  "presets": [
+    { "name":"Search drawer" }
+  ]
+}
+{%- endschema -%}

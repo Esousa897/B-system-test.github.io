@@ -1,14 +1,15 @@
 {
   "general": {
-    "search": {
-      "search": "Search",
-      "placeholder": "What are you looking for?",
-      "hint": "Type to search\u2026"
-    },
+    "search": "Search",
     "cookies": {
       "message": "We use cookies to improve your experience.",
       "accept": "Accept"
-    }
+    },
+    "search.placeholder": "Search products, categories or keywords",
+    "search.submit": "Search",
+    "search.hint": "Try: blazer zwart, midi jurk",
+    "search.results_with_count": "%{terms} — %{count} results",
+    "close": "Close"
   },
   "newsletter": {
     "subscribe": "Subscribe"
@@ -38,6 +39,38 @@
     "close": "Close"
   },
   "password_page": {
+    "opening_soon": "Opening soon"
+  },
+  "customer": {
+    "login": {
+      "sign_in": "Sign in"
+    },
+    "register": {
+      "submit": "Create"
+    }
+  },
+  "homepage": {
+    "onboarding": {
+      "collection_title": "Featured collection",
+      "product_count": "%{count} products"
+    }
+  },
+  "collections": {
+    "general": {
+      "product_count": {
+        "one": "%{count} product",
+        "other": "%{count} products"
+      }
+    }
+  },
+  "gift_card": {
+    "expired": "Gift card expired",
+    "expires_on": "Expires on %{expires_on}",
+    "card": "Gift card",
+    "use_at_checkout": "Use at checkout",
+    "add_to_apple_wallet": "Add to Apple Wallet"
+  },
+  "general.password_page": {
     "opening_soon": "Opening soon"
   }
 }
