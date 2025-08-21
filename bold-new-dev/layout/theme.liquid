@@ -1,0 +1,14 @@
+<!doctype html>
+<html lang="{{ request.locale.iso_code }}">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    {{ content_for_header }}
+    {{ 'theme.css' | asset_url | stylesheet_tag }}
+  </head>
+  <body>
+    <main id="MainContent">{{ content_for_layout }}</main>
+    {{ 'theme.js' | asset_url | script_tag }}
+    <div id="react-search-drawer"></div>
+  </body>
+</html>

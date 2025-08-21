@@ -1,0 +1,201 @@
+{% comment %} Geavanceerde Cart Drawer met upsells, quantity updates, en shipping calculator {% endcomment %}
+<div class="drawer cart-drawer" data-cart-drawer hidden>
+  <div class="drawer__overlay" data-drawer-overlay></div>
+  <div class="drawer__content">
+    <!-- Header -->
+    <div class="drawer__header">
+      <h2 class="drawer__title">
+        Winkelwagen (<span data-cart-count>{{ cart.item_count }}</span>)
+      </h2>
+      <button class="drawer__close" data-drawer-close aria-label="Sluiten">
+        <svg width="20" height="20" viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2"/>
+          <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="drawer__body">
+      <!-- Empty State -->
+      <div class="cart-empty" data-cart-empty {% unless cart.item_count == 0 %}hidden{% endunless %}>
+        <div class="cart-empty-content">
+          <svg class="cart-empty-icon" width="48" height="48" viewBox="0 0 24 24">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" fill="none" stroke="currentColor" stroke-width="1.5"/>
+            <line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M16 10a4 4 0 0 1-8 0" fill="none" stroke="currentColor" stroke-width="1.5"/>
+          </svg>
+          <h3>Je winkelwagen is leeg</h3>
+          <p>Voeg producten toe om te beginnen met winkelen</p>
+          <a href="{{ routes.all_products_collection_url }}" class="button button--primary">
+            Verder winkelen
+          </a>
+        </div>
+      </div>
+
+      <!-- Cart Items -->
+      <div class="cart-items" data-cart-items {% if cart.item_count == 0 %}hidden{% endif %}>
+        <ul class="cart-items-list" data-cart-items-list>
+          {% for item in cart.items %}
+            {% render 'cart-item', item: item %}
+          {% endfor %}
+        </ul>
+
+        <!-- Shipping Calculator -->
+        {% if section.settings.show_shipping_calculator %}
+          <div class="shipping-calculator">
+            <h4>Verzendkosten berekenen</h4>
+            <form class="shipping-form" data-shipping-form>
+              <div class="form-group">
+                <label for="shipping-country">Land</label>
+                <select id="shipping-country" name="country" required>
+                  <option value="">Selecteer land</option>
+                  <option value="NL" selected>Nederland</option>
+                  <option value="BE">België</option>
+                  <option value="DE">Duitsland</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="shipping-zip">Postcode</label>
+                <input type="text" id="shipping-zip" name="zip" placeholder="1234 AB">
+              </div>
+              <button type="submit" class="button button--secondary">Bereken</button>
+            </form>
+            <div class="shipping-results" data-shipping-results hidden>
+              <p class="shipping-rate">Verzendkosten: <span data-shipping-rate>€4,95</span></p>
+            </div>
+          </div>
+        {% endif %}
+
+        <!-- Cart Upsells -->
+        {% if section.settings.show_cart_upsells and section.settings.upsell_products != blank %}
+          <div class="cart-upsells">
+            <h4>{{ section.settings.upsell_title | default: "Vergeet deze niet" }}</h4>
+            <div class="upsell-products">
+              {% for product in section.settings.upsell_products limit: 3 %}
+                <div class="upsell-product" data-product-id="{{ product.id }}">
+                  <img src="{{ product.featured_image | image_url: width: 80 }}" alt="{{ product.title }}" width="60" height="60">
+                  <div class="upsell-info">
+                    <h5>{{ product.title }}</h5>
+                    <p class="price">{{ product.price | money }}</p>
+                  </div>
+                  <button class="upsell-add" data-add-upsell data-product-id="{{ product.selected_or_first_available_variant.id }}">
+                    +
+                  </button>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="drawer__footer" {% if cart.item_count == 0 %}hidden{% endif %} data-cart-footer>
+      <!-- Discount Code -->
+      {% if section.settings.show_discount_code %}
+        <div class="discount-code">
+          <form class="discount-form" data-discount-form>
+            <input type="text" name="discount" placeholder="Kortingscode" class="discount-input">
+            <button type="submit" class="discount-apply">Toepassen</button>
+          </form>
+        </div>
+      {% endif %}
+
+      <!-- Cart Summary -->
+      <div class="cart-summary">
+        <div class="cart-subtotal">
+          <span>Subtotaal:</span>
+          <strong data-cart-subtotal>{{ cart.total_price | money }}</strong>
+        </div>
+        
+        {% if cart.total_discounts > 0 %}
+          <div class="cart-discount">
+            <span>Korting:</span>
+            <strong>-{{ cart.total_discounts | money }}</strong>
+          </div>
+        {% endif %}
+
+        {% if section.settings.show_shipping_notice %}
+          <div class="shipping-notice">
+            {% assign free_shipping_threshold = section.settings.free_shipping_threshold | times: 100 %}
+            {% if cart.total_price >= free_shipping_threshold %}
+              <p class="shipping-free">🎉 Je hebt gratis verzending!</p>
+            {% else %}
+              {% assign remaining = free_shipping_threshold | minus: cart.total_price %}
+              <p class="shipping-progress">
+                Nog {{ remaining | money }} voor gratis verzending
+              </p>
+              <div class="progress-bar">
+                <div class="progress-fill" style="width: {{ cart.total_price | times: 100 | divided_by: free_shipping_threshold }}%"></div>
+              </div>
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Checkout Actions -->
+      <div class="checkout-actions">
+        <button class="button button--primary button--full checkout-btn" data-checkout-btn>
+          Afrekenen - <span data-cart-total>{{ cart.total_price | money }}</span>
+        </button>
+        <p class="checkout-note">Verzendkosten worden berekend bij het afrekenen</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Cart Drawer",
+  "tag": "aside",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_shipping_calculator",
+      "label": "Toon verzendkosten calculator",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_discount_code",
+      "label": "Toon kortingscode veld",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_shipping_notice",
+      "label": "Toon gratis verzending bericht",
+      "default": true
+    },
+    {
+      "type": "number",
+      "id": "free_shipping_threshold",
+      "label": "Gratis verzending vanaf (€)",
+      "default": 50
+    },
+    {
+      "type": "header",
+      "content": "Upsell producten"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_cart_upsells",
+      "label": "Toon upsell producten",
+      "default": false
+    },
+    {
+      "type": "text",
+      "id": "upsell_title",
+      "label": "Upsell titel",
+      "default": "Vergeet deze niet"
+    },
+    {
+      "type": "product_list",
+      "id": "upsell_products",
+      "label": "Upsell producten",
+      "limit": 6
+    }
+  ]
+}
+{% endschema %}

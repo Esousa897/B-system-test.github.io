@@ -1,0 +1,14 @@
+<section class="container hero">
+  <h1>{{ section.settings.heading | default: 'BOLDYASE' }}</h1>
+  <p>{{ section.settings.subheading | default: 'Minimal. Premium. You.' }}</p>
+</section>
+
+{% schema %}
+{
+  "name": "Hero (minimal)",
+  "settings": [
+    { "type": "text", "id": "heading", "label": "Heading", "default": "Welkom bij BOLDYASE" },
+    { "type": "text", "id": "subheading", "label": "Subheading", "default": "Minimal. Premium. You." }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,268 @@
+
+<div class="search-drawer" id="search-drawer">
+  <div class="search-drawer-content">
+    <div class="search-drawer-header">
+      <div class="search-input-wrapper">
+        <input type="text" 
+               class="search-drawer-input" 
+               id="search-drawer-input"
+               placeholder="{{ 'search.placeholder' | t }}"
+               autocomplete="off"
+               aria-label="Search products">
+        <button class="search-drawer-close" type="button" aria-label="Close search">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+    
+    <div class="search-drawer-body">
+      <div class="search-suggestions" id="search-suggestions">
+        <div class="search-suggestion-group">
+          <div class="search-suggestion-title">{{ 'search.suggestions.popular' | t }}</div>
+          <div class="search-suggestion-list">
+            {%- for collection in collections limit: 5 -%}
+              {%- if collection.products_count > 0 -%}
+                <a href="{{ collection.url }}" class="search-suggestion">
+                  <span class="search-suggestion-icon">🔥</span>
+                  <span>{{ collection.title }}</span>
+                </a>
+              {%- endif -%}
+            {%- endfor -%}
+          </div>
+        </div>
+        
+        <div class="search-suggestion-group">
+          <div class="search-suggestion-title">{{ 'search.suggestions.categories' | t }}</div>
+          <div class="search-suggestion-list">
+            {%- for collection in collections limit: 8 -%}
+              {%- if collection.products_count > 0 -%}
+                <a href="{{ collection.url }}" class="search-suggestion">
+                  <span class="search-suggestion-icon">📁</span>
+                  <span>{{ collection.title }}</span>
+                </a>
+              {%- endif -%}
+            {%- endfor -%}
+          </div>
+        </div>
+      </div>
+      
+      <div class="search-results" id="search-results" style="display: none;">
+        <div class="search-results-header">
+          <div class="search-results-count" id="search-results-count"></div>
+          <a href="#" class="search-view-all" id="search-view-all" style="display: none;">
+            {{ 'search.view_all' | t }}
+          </a>
+        </div>
+        <div class="search-product-grid" id="search-product-grid"></div>
+      </div>
+      
+      <div class="search-loading" id="search-loading" style="display: none;">
+        <div class="loading-spinner"></div>
+        <p>{{ 'search.loading' | t }}</p>
+      </div>
+      
+      <div class="search-no-results" id="search-no-results" style="display: none;">
+        <h4>{{ 'search.no_results_title' | t }}</h4>
+        <p>{{ 'search.no_results_text' | t }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+class SearchDrawer {
+  constructor() {
+    this.drawer = document.getElementById('search-drawer');
+    this.input = document.getElementById('search-drawer-input');
+    this.closeBtn = this.drawer.querySelector('.search-drawer-close');
+    this.suggestions = document.getElementById('search-suggestions');
+    this.results = document.getElementById('search-results');
+    this.loading = document.getElementById('search-loading');
+    this.noResults = document.getElementById('search-no-results');
+    this.resultsCount = document.getElementById('search-results-count');
+    this.viewAllBtn = document.getElementById('search-view-all');
+    this.productGrid = document.getElementById('search-product-grid');
+    
+    this.searchTimeout = null;
+    this.currentQuery = '';
+    
+    this.bindEvents();
+  }
+  
+  bindEvents() {
+    // Close drawer
+    this.closeBtn.addEventListener('click', () => this.close());
+    
+    // Search input
+    this.input.addEventListener('input', (e) => {
+      const query = e.target.value.trim();
+      this.handleSearch(query);
+    });
+    
+    // Open search drawer
+    document.addEventListener('click', (e) => {
+      if (e.target.closest('.search-toggle')) {
+        e.preventDefault();
+        this.open();
+      }
+    });
+    
+    // Overlay click
+    this.drawer.addEventListener('click', (e) => {
+      if (e.target === this.drawer) {
+        this.close();
+      }
+    });
+    
+    // Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.drawer.classList.contains('open')) {
+        this.close();
+      }
+    });
+    
+    // View all results
+    this.viewAllBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      window.location.href = `/search?q=${encodeURIComponent(this.currentQuery)}`;
+    });
+  }
+  
+  open() {
+    this.drawer.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    
+    // Focus input after animation
+    setTimeout(() => {
+      this.input.focus();
+    }, 300);
+  }
+  
+  close() {
+    this.drawer.classList.remove('open');
+    document.body.style.overflow = '';
+    this.input.value = '';
+    this.resetView();
+  }
+  
+  handleSearch(query) {
+    // Clear previous timeout
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+    
+    if (query.length === 0) {
+      this.resetView();
+      return;
+    }
+    
+    if (query.length < 2) {
+      return;
+    }
+    
+    // Debounce search
+    this.searchTimeout = setTimeout(() => {
+      this.performSearch(query);
+    }, 300);
+  }
+  
+  async performSearch(query) {
+    this.currentQuery = query;
+    this.showLoading();
+    
+    try {
+      const response = await fetch(`/search/suggest.json?q=${encodeURIComponent(query)}&resources[type]=product&resources[limit]=8`);
+      const data = await response.json();
+      
+      this.displayResults(data.resources.results.products || []);
+      
+    } catch (error) {
+      console.error('Search error:', error);
+      this.showNoResults();
+    }
+  }
+  
+  displayResults(products) {
+    this.hideLoading();
+    
+    if (products.length === 0) {
+      this.showNoResults();
+      return;
+    }
+    
+    // Update results count
+    this.resultsCount.textContent = `${products.length} {{ 'search.results_found' | t }}`;
+    
+    // Show view all button
+    this.viewAllBtn.style.display = 'inline';
+    
+    // Render products
+    this.productGrid.innerHTML = products.map(product => this.renderSearchProduct(product)).join('');
+    
+    // Show results
+    this.suggestions.style.display = 'none';
+    this.results.style.display = 'block';
+    this.noResults.style.display = 'none';
+  }
+  
+  renderSearchProduct(product) {
+    const variant = product.variants[0];
+    const image = product.images[0];
+    
+    return `
+      <a href="${product.url}" class="search-product-item">
+        <img class="search-product-image" 
+             src="${image ? image.replace('.jpg', '_60x60.jpg').replace('.png', '_60x60.png') : ''}" 
+             alt="${product.title}"
+             loading="lazy">
+        
+        <div class="search-product-info">
+          <div class="search-product-title">${product.title}</div>
+          ${product.vendor ? `<div class="search-product-vendor">${product.vendor}</div>` : ''}
+        </div>
+        
+        <div class="search-product-price">
+          ${Shopify.formatMoney(variant.price)}
+        </div>
+      </a>
+    `;
+  }
+  
+  showLoading() {
+    this.suggestions.style.display = 'none';
+    this.results.style.display = 'none';
+    this.noResults.style.display = 'none';
+    this.loading.style.display = 'block';
+  }
+  
+  hideLoading() {
+    this.loading.style.display = 'none';
+  }
+  
+  showNoResults() {
+    this.hideLoading();
+    this.suggestions.style.display = 'none';
+    this.results.style.display = 'none';
+    this.noResults.style.display = 'block';
+  }
+  
+  resetView() {
+    this.suggestions.style.display = 'block';
+    this.results.style.display = 'none';
+    this.noResults.style.display = 'none';
+    this.loading.style.display = 'none';
+    this.viewAllBtn.style.display = 'none';
+    this.currentQuery = '';
+  }
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+  window.searchDrawer = new SearchDrawer();
+});
+
+</script>
+<div id="react-search-drawer"></div>

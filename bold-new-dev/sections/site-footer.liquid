@@ -1,0 +1,49 @@
+<footer class="footer">
+  <div class="container footer__inner">
+    <div class="footer__brand">
+      <h3 class="footer__logo">{{ shop.name }}</h3>
+      <p class="footer__desc">{{ section.settings.description }}</p>
+    </div>
+
+    <nav class="footer__nav">
+      {% if section.settings.menu_1 %}
+        <div class="footer__col">
+          <h4 class="footer__heading">{{ section.settings.menu_1.title }}</h4>
+          <ul>
+            {% for link in section.settings.menu_1.links %}
+              <li><a href="{{ link.url }}">{{ link.title }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+      {% if section.settings.menu_2 %}
+        <div class="footer__col">
+          <h4 class="footer__heading">{{ section.settings.menu_2.title }}</h4>
+          <ul>
+            {% for link in section.settings.menu_2.links %}
+              <li><a href="{{ link.url }}">{{ link.title }}</a></li>
+            {% endfor %}
+          </ul>
+        </div>
+      {% endif %}
+    </nav>
+  </div>
+
+  <div class="footer__bottom">
+    <div class="container">
+      <small>© {{ 'now' | date: '%Y' }} {{ shop.name }}. Alle rechten voorbehouden.</small>
+    </div>
+  </div>
+</footer>
+
+{% schema %}
+{
+  "name": "Footer (simple)",
+  "settings": [
+    { "type": "textarea", "id": "description", "label": "Korte beschrijving", "default": "Premium fashion met een minimalistische, moderne stijl." },
+    { "type": "link_list", "id": "menu_1", "label": "Menu 1" },
+    { "type": "link_list", "id": "menu_2", "label": "Menu 2" }
+  ],
+  "presets": [{ "name": "Footer (simple)" }]
+}
+{% endschema %}

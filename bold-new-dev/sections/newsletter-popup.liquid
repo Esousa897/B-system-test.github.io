@@ -1,0 +1,342 @@
+{%- if section.settings.show_popup -%}
+<div class="newsletter-popup" id="newsletter-popup">
+  <div class="newsletter-content">
+    <button class="newsletter-close" type="button" aria-label="Close newsletter popup">
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+        <path d="M15 5L5 15M5 5l10 10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+    </button>
+    
+    {%- if section.settings.popup_image != blank -%}
+      <img class="newsletter-image" 
+           src="{{ section.settings.popup_image | img_url: '500x200' }}" 
+           alt="{{ section.settings.popup_title | escape }}"
+           loading="lazy">
+    {%- else -%}
+      <div class="newsletter-image newsletter-image--placeholder">
+        <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+          <polyline points="22,6 12,13 2,6"></polyline>
+        </svg>
+      </div>
+    {%- endif -%}
+    
+    <div class="newsletter-body">
+      <h3 class="newsletter-title">
+        {{ section.settings.popup_title | default: 'Stay in the loop!' }}
+      </h3>
+      
+      <p class="newsletter-subtitle">
+        {{ section.settings.popup_text | default: 'Subscribe to our newsletter for exclusive offers and updates.' }}
+      </p>
+      
+      <form class="newsletter-form" action="/contact#newsletter" method="post" accept-charset="UTF-8">
+        <input type="hidden" name="form_type" value="customer">
+        <input type="hidden" name="utf8" value="✓">
+        <input type="hidden" name="contact[tags]" value="newsletter">
+        
+        <div class="newsletter-input-wrapper">
+          <input type="email" 
+                 class="newsletter-input" 
+                 name="contact[email]" 
+                 placeholder="{{ 'newsletter.email_placeholder' | t }}"
+                 required
+                 aria-label="Email address">
+          
+          <button type="submit" class="newsletter-submit">
+            {{ section.settings.popup_button_text | default: 'Subscribe' }}
+          </button>
+        </div>
+        
+        {%- if section.settings.show_discount -%}
+          <p class="newsletter-discount">
+            <span class="discount-icon">🎉</span>
+            {{ section.settings.discount_text | default: 'Get 10% off your first order!' }}
+          </p>
+        {%- endif -%}
+      </form>
+      
+      {%- if section.settings.popup_disclaimer != blank -%}
+        <p class="newsletter-disclaimer">
+          {{ section.settings.popup_disclaimer }}
+        </p>
+      {%- endif -%}
+      
+      <button type="button" class="newsletter-no-thanks">
+        {{ 'newsletter.no_thanks' | t | default: 'No thanks' }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+class NewsletterPopup {
+  constructor() {
+    this.popup = document.getElementById('newsletter-popup');
+    if (!this.popup) return;
+    
+    this.closeBtn = this.popup.querySelector('.newsletter-close');
+    this.noThanksBtn = this.popup.querySelector('.newsletter-no-thanks');
+    this.form = this.popup.querySelector('.newsletter-form');
+    
+    this.delay = {{ section.settings.popup_delay | default: 5000 }};
+    this.frequency = {{ section.settings.popup_frequency | default: 7 }};
+    this.storageKey = 'newsletter_popup_dismissed';
+    
+    this.bindEvents();
+    this.checkAndShow();
+  }
+  
+  bindEvents() {
+    // Close buttons
+    this.closeBtn.addEventListener('click', () => this.dismiss());
+    this.noThanksBtn.addEventListener('click', () => this.dismiss());
+    
+    // Overlay click
+    this.popup.addEventListener('click', (e) => {
+      if (e.target === this.popup) {
+        this.dismiss();
+      }
+    });
+    
+    // Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.popup.classList.contains('show')) {
+        this.dismiss();
+      }
+    });
+    
+    // Form submission
+    this.form.addEventListener('submit', (e) => {
+      this.handleSubmit(e);
+    });
+  }
+  
+  checkAndShow() {
+    // Check if popup should be shown
+    const dismissed = localStorage.getItem(this.storageKey);
+    
+    if (dismissed) {
+      const dismissedDate = new Date(dismissed);
+      const daysSinceDismissed = (Date.now() - dismissedDate.getTime()) / (1000 * 60 * 60 * 24);
+      
+      if (daysSinceDismissed < this.frequency) {
+        return; // Don't show popup yet
+      }
+    }
+    
+    // Show popup after delay
+    setTimeout(() => {
+      this.show();
+    }, this.delay);
+  }
+  
+  show() {
+    this.popup.classList.add('show');
+    document.body.style.overflow = 'hidden';
+    
+    // Track popup view
+    if (typeof gtag !== 'undefined') {
+      gtag('event', 'newsletter_popup_view');
+    }
+  }
+  
+  dismiss() {
+    this.popup.classList.remove('show');
+    document.body.style.overflow = '';
+    
+    // Store dismissal date
+    localStorage.setItem(this.storageKey, new Date().toISOString());
+    
+    // Track dismissal
+    if (typeof gtag !== 'undefined') {
+      gtag('event', 'newsletter_popup_dismiss');
+    }
+  }
+  
+  async handleSubmit(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this.form);
+    const submitBtn = this.form.querySelector('.newsletter-submit');
+    const originalText = submitBtn.textContent;
+    
+    // Show loading state
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<div class="spinner"></div>';
+    
+    try {
+      const response = await fetch('/contact', {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (response.ok) {
+        // Success
+        submitBtn.innerHTML = '✓';
+        submitBtn.classList.add('success');
+        
+        // Track subscription
+        if (typeof gtag !== 'undefined') {
+          gtag('event', 'newsletter_subscribe', {
+            method: 'popup'
+          });
+        }
+        
+        // Show success message and close
+        setTimeout(() => {
+          this.showSuccessMessage();
+          this.dismiss();
+        }, 1500);
+        
+        // Store successful subscription
+        localStorage.setItem('newsletter_subscribed', 'true');
+        
+      } else {
+        throw new Error('Subscription failed');
+      }
+      
+    } catch (error) {
+      console.error('Newsletter subscription error:', error);
+      
+      // Show error
+      submitBtn.textContent = '{{ "newsletter.error" | t | default: "Try again" }}';
+      submitBtn.classList.add('error');
+      
+      setTimeout(() => {
+        submitBtn.textContent = originalText;
+        submitBtn.disabled = false;
+        submitBtn.classList.remove('error');
+      }, 2000);
+    }
+  }
+  
+  showSuccessMessage() {
+    // Create success notification
+    const notification = document.createElement('div');
+    notification.className = 'newsletter-success-notification';
+    notification.innerHTML = `
+      <div class="success-content">
+        <div class="success-icon">✓</div>
+        <div class="success-text">
+          <h4>{{ "newsletter.success_title" | t | default: "Welcome!" }}</h4>
+          <p>{{ "newsletter.success_text" | t | default: "Thanks for subscribing to our newsletter." }}</p>
+        </div>
+      </div>
+    `;
+    
+    notification.style.cssText = `
+      position: fixed;
+      top: 2rem;
+      right: 2rem;
+      background: white;
+      border: 1px solid var(--color-success, #28a745);
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+      z-index: 10000;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      max-width: 300px;
+    `;
+    
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+      notification.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // Remove after delay
+    setTimeout(() => {
+      notification.style.transform = 'translateX(100%)';
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.parentNode.removeChild(notification);
+        }
+      }, 300);
+    }, 5000);
+  }
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+  // Only initialize if not on mobile and user hasn't subscribed
+  if (window.innerWidth > 768 && !localStorage.getItem('newsletter_subscribed')) {
+    new NewsletterPopup();
+  }
+});
+</script>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Newsletter Popup",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_popup",
+      "label": "Show newsletter popup",
+      "default": false
+    },
+    {
+      "type": "image_picker",
+      "id": "popup_image",
+      "label": "Popup image"
+    },
+    {
+      "type": "text",
+      "id": "popup_title",
+      "label": "Popup title",
+      "default": "Stay in the loop!"
+    },
+    {
+      "type": "textarea",
+      "id": "popup_text",
+      "label": "Popup text",
+      "default": "Subscribe to our newsletter for exclusive offers and updates."
+    },
+    {
+      "type": "text",
+      "id": "popup_button_text",
+      "label": "Button text",
+      "default": "Subscribe"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_discount",
+      "label": "Show discount offer",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "discount_text",
+      "label": "Discount text",
+      "default": "Get 10% off your first order!"
+    },
+    {
+      "type": "textarea",
+      "id": "popup_disclaimer",
+      "label": "Disclaimer text"
+    },
+    {
+      "type": "range",
+      "id": "popup_delay",
+      "label": "Popup delay (seconds)",
+      "min": 1,
+      "max": 30,
+      "step": 1,
+      "default": 5
+    },
+    {
+      "type": "range",
+      "id": "popup_frequency",
+      "label": "Show again after (days)",
+      "min": 1,
+      "max": 30,
+      "step": 1,
+      "default": 7
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,221 @@
+{% comment %} Geavanceerde Header met sticky navigation, search suggestions, en cart preview {% endcomment %}
+<div class="header-wrapper" data-header-wrapper>
+  <!-- Announcement Bar -->
+  {% if section.settings.show_announcement %}
+    <div class="announcement-bar" data-announcement>
+      <div class="container">
+        <p class="announcement-text">{{ section.settings.announcement_text }}</p>
+        {% if section.settings.announcement_link != blank %}
+          <a href="{{ section.settings.announcement_link }}" class="announcement-cta">{{ section.settings.announcement_cta }}</a>
+        {% endif %}
+        <button class="announcement-close" data-announcement-close aria-label="Sluiten">
+          <svg width="12" height="12" viewBox="0 0 12 12"><path d="M1 1l10 10M1 11L11 1" stroke="currentColor" stroke-width="1.5"/></svg>
+        </button>
+      </div>
+    </div>
+  {% endif %}
+
+  <header class="site-header" data-header data-sticky="{{ section.settings.sticky_header }}">
+    <div class="container header-container">
+      <!-- Mobile Menu Toggle -->
+      <div class="header-item header-item--left">
+        <button class="nav-toggle" data-nav-toggle aria-label="Menu openen" aria-expanded="false">
+          <span class="hamburger">
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+          </span>
+        </button>
+      </div>
+
+      <!-- Logo -->
+      <div class="header-item header-item--center">
+        <a href="{{ routes.root_url }}" class="site-logo">
+          {% if section.settings.logo != blank %}
+            <img src="{{ section.settings.logo | image_url: width: 200 }}" 
+                 alt="{{ shop.name }}" 
+                 width="{{ section.settings.logo_width | default: 120 }}"
+                 height="auto"
+                 loading="eager">
+          {% else %}
+            <span class="logo-text">{{ shop.name }}</span>
+          {% endif %}
+        </a>
+      </div>
+
+      <!-- Desktop Navigation -->
+      <nav class="desktop-nav" data-desktop-nav>
+        <ul class="nav-list">
+          {% for link in linklists[section.settings.main_menu].links %}
+            <li class="nav-item {% if link.links != blank %}has-dropdown{% endif %}">
+              <a href="{{ link.url }}" class="nav-link">
+                {{ link.title }}
+                {% if link.links != blank %}
+                  <svg class="dropdown-icon" width="8" height="5" viewBox="0 0 8 5">
+                    <path d="M1 1l3 3 3-3" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                  </svg>
+                {% endif %}
+              </a>
+              
+              {% if link.links != blank %}
+                <div class="dropdown-menu">
+                  <div class="dropdown-content">
+                    {% for child_link in link.links %}
+                      <a href="{{ child_link.url }}" class="dropdown-link">{{ child_link.title }}</a>
+                    {% endfor %}
+                  </div>
+                </div>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      </nav>
+
+      <!-- Header Actions -->
+      <div class="header-item header-item--right">
+        <div class="header-actions">
+          <!-- Search -->
+          <button class="header-action" data-search-toggle aria-label="Zoeken">
+            <svg class="icon icon-search" width="20" height="20" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8" fill="none" stroke="currentColor" stroke-width="2"/>
+              <line x1="21" y1="21" x2="16.65" y2="16.65" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </button>
+
+          <!-- Account -->
+          {% if shop.customer_accounts_enabled %}
+            <a href="{{ routes.account_url }}" class="header-action" aria-label="Account">
+              <svg class="icon icon-account" width="20" height="20" viewBox="0 0 24 24">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" fill="none" stroke="currentColor" stroke-width="2"/>
+                <circle cx="12" cy="7" r="4" fill="none" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </a>
+          {% endif %}
+
+          <!-- Cart -->
+          <button class="header-action cart-toggle" data-cart-toggle aria-label="Winkelwagen">
+            <svg class="icon icon-cart" width="20" height="20" viewBox="0 0 24 24">
+              <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" fill="none" stroke="currentColor" stroke-width="2"/>
+              <line x1="3" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="2"/>
+              <path d="M16 10a4 4 0 0 1-8 0" fill="none" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            <span class="cart-count" data-cart-count>{{ cart.item_count }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile Navigation -->
+    <nav class="mobile-nav" data-mobile-nav aria-expanded="false">
+      <div class="mobile-nav-content">
+        <div class="mobile-nav-header">
+          <span class="mobile-nav-title">Menu</span>
+          <button class="mobile-nav-close" data-nav-close aria-label="Menu sluiten">
+            <svg width="20" height="20" viewBox="0 0 24 24">
+              <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2"/>
+              <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </button>
+        </div>
+        
+        <ul class="mobile-nav-list">
+          {% for link in linklists[section.settings.main_menu].links %}
+            <li class="mobile-nav-item {% if link.links != blank %}has-children{% endif %}">
+              <a href="{{ link.url }}" class="mobile-nav-link">{{ link.title }}</a>
+              {% if link.links != blank %}
+                <button class="mobile-nav-toggle" data-mobile-submenu-toggle>
+                  <svg width="12" height="12" viewBox="0 0 12 12">
+                    <path d="M3 4.5l3 3 3-3" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                  </svg>
+                </button>
+                <ul class="mobile-submenu">
+                  {% for child_link in link.links %}
+                    <li><a href="{{ child_link.url }}" class="mobile-submenu-link">{{ child_link.title }}</a></li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+
+        <!-- Mobile Actions -->
+        <div class="mobile-nav-actions">
+          {% if shop.customer_accounts_enabled %}
+            <a href="{{ routes.account_url }}" class="mobile-nav-action">
+              <svg width="20" height="20" viewBox="0 0 24 24">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" fill="none" stroke="currentColor" stroke-width="2"/>
+                <circle cx="12" cy="7" r="4" fill="none" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              Account
+            </a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="mobile-nav-overlay" data-nav-overlay></div>
+    </nav>
+  </header>
+</div>
+
+{% schema %}
+{
+  "name": "Header",
+  "tag": "header",
+  "class": "section-header",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "sticky_header",
+      "label": "Sticky header",
+      "default": true
+    },
+    {
+      "type": "image_picker",
+      "id": "logo",
+      "label": "Logo afbeelding"
+    },
+    {
+      "type": "range",
+      "id": "logo_width",
+      "min": 80,
+      "max": 300,
+      "step": 10,
+      "unit": "px",
+      "label": "Logo breedte",
+      "default": 120
+    },
+    {
+      "type": "link_list",
+      "id": "main_menu",
+      "label": "Hoofdmenu",
+      "default": "main-menu"
+    },
+    {
+      "type": "header",
+      "content": "Aankondigingsbalk"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_announcement",
+      "label": "Toon aankondigingsbalk",
+      "default": false
+    },
+    {
+      "type": "text",
+      "id": "announcement_text",
+      "label": "Aankondigingstekst",
+      "default": "Gratis verzending vanaf €50"
+    },
+    {
+      "type": "url",
+      "id": "announcement_link",
+      "label": "Aankondigingslink"
+    },
+    {
+      "type": "text",
+      "id": "announcement_cta",
+      "label": "Link tekst",
+      "default": "Shop nu"
+    }
+  ]
+}
+{% endschema %}

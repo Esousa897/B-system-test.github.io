@@ -1,0 +1,78 @@
+{% comment %} Hero slide content snippet {% endcomment %}
+<div class="hero-slide-background">
+  {% case block.settings.background_type %}
+    {% when 'image' %}
+      {% if block.settings.background_image %}
+        <div class="hero-bg-image">
+          <picture>
+            {% if block.settings.background_image_mobile %}
+              <source media="(max-width: 768px)" 
+                      srcset="{{ block.settings.background_image_mobile | image_url: width: 768 }} 768w,
+                              {{ block.settings.background_image_mobile | image_url: width: 1024 }} 1024w">
+            {% endif %}
+            <img src="{{ block.settings.background_image | image_url: width: 1920 }}"
+                 srcset="{{ block.settings.background_image | image_url: width: 1200 }} 1200w,
+                         {{ block.settings.background_image | image_url: width: 1920 }} 1920w,
+                         {{ block.settings.background_image | image_url: width: 2400 }} 2400w"
+                 sizes="100vw"
+                 alt="{{ block.settings.title | escape }}"
+                 loading="{% if forloop.first %}eager{% else %}lazy{% endif %}">
+          </picture>
+        </div>
+      {% endif %}
+    {% when 'video' %}
+      {% if block.settings.background_video %}
+        <div class="hero-bg-video">
+          <video autoplay muted loop playsinline>
+            <source src="{{ block.settings.background_video }}" type="video/mp4">
+          </video>
+        </div>
+      {% endif %}
+    {% when 'gradient' %}
+      <div class="hero-bg-gradient" style="background: {{ block.settings.background_gradient }};"></div>
+  {% endcase %}
+  
+  {% if block.settings.background_overlay_opacity > 0 %}
+    <div class="hero-overlay" style="opacity: {{ block.settings.background_overlay_opacity | divided_by: 100.0 }};"></div>
+  {% endif %}
+</div>
+
+<div class="hero-content hero-content--{{ block.settings.content_position }} hero-content--{{ block.settings.text_alignment }}">
+  <div class="container">
+    <div class="hero-content-inner" style="color: {{ block.settings.text_color }};">
+      {% if block.settings.subtitle != blank %}
+        <p class="hero-subtitle" data-aos="fade-up" data-aos-delay="100">
+          {{ block.settings.subtitle }}
+        </p>
+      {% endif %}
+      
+      {% if block.settings.title != blank %}
+        <h1 class="hero-title" data-aos="fade-up" data-aos-delay="200">
+          {{ block.settings.title }}
+        </h1>
+      {% endif %}
+      
+      {% if block.settings.description != blank %}
+        <div class="hero-description" data-aos="fade-up" data-aos-delay="300">
+          {{ block.settings.description }}
+        </div>
+      {% endif %}
+      
+      {% if block.settings.button_text != blank or block.settings.button_text_secondary != blank %}
+        <div class="hero-actions" data-aos="fade-up" data-aos-delay="400">
+          {% if block.settings.button_text != blank and block.settings.button_link != blank %}
+            <a href="{{ block.settings.button_link }}" class="button button--primary button--large">
+              {{ block.settings.button_text }}
+            </a>
+          {% endif %}
+          
+          {% if block.settings.button_text_secondary != blank and block.settings.button_link_secondary != blank %}
+            <a href="{{ block.settings.button_link_secondary }}" class="button button--secondary button--large">
+              {{ block.settings.button_text_secondary }}
+            </a>
+          {% endif %}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>

@@ -1,0 +1,329 @@
+{% comment %} Geavanceerde Product Grid met filters, sorting, en lazy loading {% endcomment %}
+<section class="product-grid-section" data-product-grid>
+  <div class="container">
+    <!-- Section Header -->
+    <div class="section-header">
+      {% if section.settings.title != blank %}
+        <h2 class="section-title">{{ section.settings.title }}</h2>
+      {% endif %}
+      
+      {% if section.settings.description != blank %}
+        <div class="section-description">
+          {{ section.settings.description }}
+        </div>
+      {% endif %}
+    </div>
+
+    <!-- Filter and Sort Bar -->
+    {% if section.settings.show_filters or section.settings.show_sorting %}
+      <div class="product-toolbar">
+        <div class="toolbar-left">
+          {% if section.settings.show_filters %}
+            <button class="filter-toggle" data-filter-toggle>
+              <svg width="20" height="20" viewBox="0 0 24 24">
+                <polygon points="22,3 2,3 10,12.46 10,19 14,21 14,12.46" fill="none" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              Filters
+              <span class="filter-count" data-filter-count hidden></span>
+            </button>
+          {% endif %}
+        </div>
+
+        <div class="toolbar-right">
+          {% if section.settings.show_sorting %}
+            <div class="sort-dropdown">
+              <label for="sort-by">Sorteer op:</label>
+              <select id="sort-by" data-sort-by>
+                <option value="manual">Aanbevolen</option>
+                <option value="best-selling">Bestsellers</option>
+                <option value="title-ascending">A-Z</option>
+                <option value="title-descending">Z-A</option>
+                <option value="price-ascending">Prijs: laag naar hoog</option>
+                <option value="price-descending">Prijs: hoog naar laag</option>
+                <option value="created-descending">Nieuwste eerst</option>
+                <option value="created-ascending">Oudste eerst</option>
+              </select>
+            </div>
+          {% endif %}
+
+          <div class="view-toggle">
+            <button class="view-btn view-btn--grid active" data-view="grid" aria-label="Grid weergave">
+              <svg width="16" height="16" viewBox="0 0 24 24">
+                <rect x="3" y="3" width="7" height="7" fill="currentColor"/>
+                <rect x="14" y="3" width="7" height="7" fill="currentColor"/>
+                <rect x="3" y="14" width="7" height="7" fill="currentColor"/>
+                <rect x="14" y="14" width="7" height="7" fill="currentColor"/>
+              </svg>
+            </button>
+            <button class="view-btn view-btn--list" data-view="list" aria-label="Lijst weergave">
+              <svg width="16" height="16" viewBox="0 0 24 24">
+                <line x1="8" y1="6" x2="21" y2="6" stroke="currentColor" stroke-width="2"/>
+                <line x1="8" y1="12" x2="21" y2="12" stroke="currentColor" stroke-width="2"/>
+                <line x1="8" y1="18" x2="21" y2="18" stroke="currentColor" stroke-width="2"/>
+                <line x1="3" y1="6" x2="3.01" y2="6" stroke="currentColor" stroke-width="2"/>
+                <line x1="3" y1="12" x2="3.01" y2="12" stroke="currentColor" stroke-width="2"/>
+                <line x1="3" y1="18" x2="3.01" y2="18" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    <!-- Main Content Area -->
+    <div class="product-grid-container">
+      <!-- Sidebar Filters -->
+      {% if section.settings.show_filters %}
+        <aside class="product-filters" data-product-filters>
+          <div class="filters-header">
+            <h3>Filters</h3>
+            <button class="filters-close" data-filters-close>
+              <svg width="20" height="20" viewBox="0 0 24 24">
+                <line x1="18" y1="6" x2="6" y2="18" stroke="currentColor" stroke-width="2"/>
+                <line x1="6" y1="6" x2="18" y2="18" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="filters-content">
+            <!-- Active Filters -->
+            <div class="active-filters" data-active-filters hidden>
+              <div class="active-filters-header">
+                <span>Actieve filters:</span>
+                <button class="clear-all-filters" data-clear-all>Alles wissen</button>
+              </div>
+              <div class="active-filters-list" data-active-filters-list></div>
+            </div>
+
+            <!-- Price Filter -->
+            <div class="filter-group">
+              <h4 class="filter-title">Prijs</h4>
+              <div class="price-range">
+                <div class="price-inputs">
+                  <input type="number" id="price-min" placeholder="Min" data-price-min>
+                  <span>-</span>
+                  <input type="number" id="price-max" placeholder="Max" data-price-max>
+                </div>
+                <div class="price-slider" data-price-slider>
+                  <div class="price-track"></div>
+                  <div class="price-range-fill"></div>
+                  <input type="range" class="price-range-min" min="0" max="500" value="0" data-range-min>
+                  <input type="range" class="price-range-max" min="0" max="500" value="500" data-range-max>
+                </div>
+              </div>
+            </div>
+
+            <!-- Availability Filter -->
+            <div class="filter-group">
+              <h4 class="filter-title">Beschikbaarheid</h4>
+              <div class="filter-options">
+                <label class="filter-option">
+                  <input type="checkbox" name="availability" value="in-stock" data-filter="availability">
+                  <span class="checkmark"></span>
+                  Op voorraad
+                </label>
+                <label class="filter-option">
+                  <input type="checkbox" name="availability" value="out-of-stock" data-filter="availability">
+                  <span class="checkmark"></span>
+                  Uitverkocht
+                </label>
+              </div>
+            </div>
+
+            <!-- Size Filter -->
+            {% if section.settings.show_size_filter %}
+              <div class="filter-group">
+                <h4 class="filter-title">Maat</h4>
+                <div class="filter-options size-options">
+                  {% assign sizes = 'XS,S,M,L,XL,XXL' | split: ',' %}
+                  {% for size in sizes %}
+                    <label class="filter-option size-option">
+                      <input type="checkbox" name="size" value="{{ size | downcase }}" data-filter="size">
+                      <span class="size-label">{{ size }}</span>
+                    </label>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+
+            <!-- Color Filter -->
+            {% if section.settings.show_color_filter %}
+              <div class="filter-group">
+                <h4 class="filter-title">Kleur</h4>
+                <div class="filter-options color-options">
+                  {% assign colors = section.settings.filter_colors | split: ',' %}
+                  {% for color in colors %}
+                    {% assign color_name = color | strip %}
+                    <label class="filter-option color-option">
+                      <input type="checkbox" name="color" value="{{ color_name | downcase }}" data-filter="color">
+                      <span class="color-swatch" style="background-color: {{ color_name | downcase }};"></span>
+                      <span class="color-name">{{ color_name }}</span>
+                    </label>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+
+            <!-- Brand Filter -->
+            {% if section.settings.show_brand_filter %}
+              <div class="filter-group">
+                <h4 class="filter-title">Merk</h4>
+                <div class="filter-options">
+                  {% assign brands = section.settings.filter_brands | split: ',' %}
+                  {% for brand in brands %}
+                    {% assign brand_name = brand | strip %}
+                    <label class="filter-option">
+                      <input type="checkbox" name="brand" value="{{ brand_name | downcase }}" data-filter="brand">
+                      <span class="checkmark"></span>
+                      {{ brand_name }}
+                    </label>
+                  {% endfor %}
+                </div>
+              </div>
+            {% endif %}
+          </div>
+        </aside>
+      {% endif %}
+
+      <!-- Product Grid -->
+      <div class="product-grid-main">
+        <!-- Loading State -->
+        <div class="products-loading" data-products-loading hidden>
+          <div class="loading-grid">
+            {% for i in (1..8) %}
+              <div class="product-skeleton">
+                <div class="skeleton-image"></div>
+                <div class="skeleton-content">
+                  <div class="skeleton-title"></div>
+                  <div class="skeleton-price"></div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="products-grid" data-products-grid data-view="grid">
+          {% assign collection = collections[section.settings.collection] %}
+          {% if collection.products.size > 0 %}
+            {% for product in collection.products limit: section.settings.products_per_page %}
+              {% render 'product-card', product: product, show_quick_add: section.settings.show_quick_add %}
+            {% endfor %}
+          {% else %}
+            <div class="no-products">
+              <h3>Geen producten gevonden</h3>
+              <p>Probeer andere filters of bekijk alle producten</p>
+            </div>
+          {% endif %}
+        </div>
+
+        <!-- Load More Button -->
+        {% if collection.products.size > section.settings.products_per_page %}
+          <div class="load-more-container">
+            <button class="button button--secondary load-more-btn" data-load-more>
+              Meer laden
+            </button>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter Overlay for Mobile -->
+  <div class="filter-overlay" data-filter-overlay hidden></div>
+</section>
+
+{% schema %}
+{
+  "name": "Product Grid",
+  "tag": "section",
+  "class": "section-product-grid",
+  "settings": [
+    {
+      "type": "text",
+      "id": "title",
+      "label": "Sectie titel",
+      "default": "Onze Producten"
+    },
+    {
+      "type": "richtext",
+      "id": "description",
+      "label": "Sectie beschrijving"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Collectie"
+    },
+    {
+      "type": "range",
+      "id": "products_per_page",
+      "min": 8,
+      "max": 50,
+      "step": 2,
+      "label": "Producten per pagina",
+      "default": 16
+    },
+    {
+      "type": "header",
+      "content": "Weergave opties"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_filters",
+      "label": "Toon filters",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_sorting",
+      "label": "Toon sorteer opties",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_quick_add",
+      "label": "Toon snelle toevoegen knop",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Filter opties"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_size_filter",
+      "label": "Toon maat filter",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_color_filter",
+      "label": "Toon kleur filter",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "filter_colors",
+      "label": "Filter kleuren (komma gescheiden)",
+      "default": "Zwart, Wit, Rood, Blauw, Groen, Roze"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_brand_filter",
+      "label": "Toon merk filter",
+      "default": false
+    },
+    {
+      "type": "text",
+      "id": "filter_brands",
+      "label": "Filter merken (komma gescheiden)"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Product Grid"
+    }
+  ]
+}
+{% endschema %}
