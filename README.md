@@ -1,5 +1,3 @@
-# BOLDYASE - Skeleton+ (Uploadable) • 2025-08-16T23:54:08
-
 Uploadbaar Shopify OS 2.0 skelet met **alle basis-mappen** en **noodzakelijke placeholder-bestanden**.
 Doel: meteen kunnen uploaden en stapsgewijs uitbouwen (megamenus, predictive search, PWA, aanbevelingen, etc.).
 
@@ -15,3 +13,4 @@ Doel: meteen kunnen uploaden en stapsgewijs uitbouwen (megamenus, predictive sea
 - **locales/**: en.default.json, nl.default.json
 
 > Alle code is **minimal** en geldig; geen externe apps vereist. Volgende stappen: performance (srcset/WebP), predictive search, megamenu, AR/360, aanbevelingen, enz.
+EOF
