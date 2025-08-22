@@ -1,0 +1,12 @@
+
+# Editor & junk
+.vscode/
+0
+1
+# local helpers/backups
+replacement.txt
+replacements.txt
+.git_backup/
+# node modules (als nog niet)
+node_modules/
+dist/
