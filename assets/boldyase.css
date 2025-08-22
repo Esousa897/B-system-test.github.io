@@ -1,0 +1,10 @@
+/* BOLDYASE global tokens (licht, minimal, geen geel) */
+:root{
+  --by-black:#111111;
+  --by-white:#ffffff;
+  --by-gold:#C8A857; /* subtiele accentkleur */
+  --by-muted:#666666;
+  --by-border:#EAEAEA;
+  --by-radius:12px;
+}
+html{scroll-behavior:smooth}

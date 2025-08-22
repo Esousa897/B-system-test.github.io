@@ -1,0 +1,55 @@
+{% comment %} BOLDYASE • Product Card (hover swap + quick add) {% endcomment %}
+{% assign prod = product %}
+{% assign first_media = prod.featured_media %}
+{% assign second_media = prod.media[1] %}
+
+<style>
+.by-card{background:#fff;border:1px solid #eee;border-radius:14px;overflow:hidden;transition:transform .2s ease,box-shadow .2s ease}
+.by-card:hover{transform:translateY(-6px);box-shadow:0 16px 40px rgba(0,0,0,.08)}
+.by-card__img{position:relative;aspect-ratio:3/4}
+.by-card__img img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:opacity .25s ease}
+.by-card__img img[data-alt]{opacity:0}
+.by-card:hover .by-card__img img[data-alt]{opacity:1}
+.by-card:hover .by-card__img img[data-main]{opacity:0}
+.by-badge{position:absolute;top:10px;left:10px;background:#111;color:#fff;font:700 11px/1 Inter;padding:6px 8px;border-radius:999px}
+.by-card__info{padding:12px}
+.by-card__title{font:600 14px/1.4 Inter,system-ui;margin:0 0 6px}
+.by-price{display:flex;gap:8px;align-items:center;font:700 14px/1 Inter}
+.by-price s{color:#888;font-weight:500}
+.by-card__cta{margin-top:10px}
+.by-btn{width:100%;height:44px;border-radius:10px;border:1px solid #111;background:#111;color:#fff;font:700 13px/1 Inter}
+.by-btn:disabled{opacity:.5}
+</style>
+
+<article class="by-card">
+  <a class="by-card__img" href="{{ prod.url }}">
+    {% if first_media %}
+      {{ first_media | image_url: width: 800 | image_tag: loading: 'lazy', alt: prod.title, data-main: '' }}
+      {% if second_media %}
+        {{ second_media | image_url: width: 800 | image_tag: loading: 'lazy', alt: prod.title, data-alt: '' }}
+      {% endif %}
+    {% else %}
+      <div style="background:#f3f3f3;width:100%;height:100%"></div>
+    {% endif %}
+    {% if prod.compare_at_price_max > prod.price %}
+      <span class="by-badge">SALE</span>
+    {% endif %}
+  </a>
+  <div class="by-card__info">
+    <h3 class="by-card__title"><a href="{{ prod.url }}" style="text-decoration:none;color:#111">{{ prod.title }}</a></h3>
+    <div class="by-price">
+      {% if prod.compare_at_price_max > prod.price %}
+        <s>{{ prod.compare_at_price_max | money }}</s>
+      {% endif %}
+      <span>{{ prod.price | money }}</span>
+    </div>
+    {% if prod.available %}
+      {% assign v = prod.selected_or_first_available_variant %}
+      <div class="by-card__cta">
+        <button class="by-btn" data-by-add data-variant-id="{{ v.id }}">Snel toevoegen</button>
+      </div>
+    {% else %}
+      <div class="by-card__cta"><button class="by-btn" disabled>Uitverkocht</button></div>
+    {% endif %}
+  </div>
+</article>

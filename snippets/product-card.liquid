@@ -1,160 +1,19 @@
-{%- assign p = product -%}
-<a class="card" href="{{ p.url }}">
-  <div class="card__media">
-    {% if p.featured_image %}
-      <img loading="lazy" src="{{ p.featured_image | image_url: width: 700 }}" alt="{{ p.title | escape }}">
+<div class="product-card">
+  <a href="{{ product.url | within: collection }}" class="product-media">
+    {% if product.featured_image %}
+      <img src="{{ product.featured_image | img_url: '600x600' }}" alt="{{ product.title }}"/>
     {% else %}
-      <div class="ph"></div>
+      <div style="height:220px;background:#f3f4f6;display:flex;align-items:center;justify-content:center">No image</div>
     {% endif %}
-    {% if p.compare_at_price > p.price %}
-      <span class="badge badge--sale">Sale</span>
-    {% endif %}
+  </a>
+  <div class="info">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <strong>{{ product.title }}</strong>
+      <span class="price">{{ product.price | money }}</span>
+    </div>
+    <p style="margin:0;color:#6b7280">{{ product.vendor }}</p>
+    <div style="margin-top:auto">
+      <button class="btn btn-add-to-cart">Add to cart</button>
+    </div>
   </div>
-  <div class="card__info">
-    <h3 class="card__title">{{ p.title }}</h3>
-    <div class="card__price">{% render 'price', product: p %}</div>
-  </div>
-</a>
-{%- assign product = all_products[product.handle] -%}
-{%- assign current_variant = product.selected_or_first_available_variant -%}
-
-<div class="quick-view-images">
-  <img class="quick-view-main-image" 
-       src="{{ current_variant.featured_image | default: product.featured_image | img_url: '600x600' }}" 
-       alt="{{ current_variant.featured_image.alt | default: product.featured_image.alt | escape }}"
-       loading="lazy">
-  
-  {%- if product.images.size > 1 -%}
-    <div class="quick-view-thumbnails">
-      {%- for image in product.images limit: 5 -%}
-        <img class="quick-view-thumb {% if forloop.first %}active{% endif %}" 
-             src="{{ image | img_url: '80x80' }}" 
-             alt="{{ image.alt | escape }}"
-             loading="lazy">
-      {%- endfor -%}
-    </div>
-  {%- endif -%}
-</div>
-
-<div class="quick-view-info">
-  {%- if product.vendor != blank -%}
-    <div class="quick-view-vendor">{{ product.vendor }}</div>
-  {%- endif -%}
-  
-  <h2 class="quick-view-title" id="quick-view-title">{{ product.title | escape }}</h2>
-  
-  <div class="quick-view-price">
-    <span class="price {% if current_variant.compare_at_price > current_variant.price %}price--sale{% endif %}">
-      {{ current_variant.price | money }}
-    </span>
-    {%- if current_variant.compare_at_price > current_variant.price -%}
-      <span class="price--compare">{{ current_variant.compare_at_price | money }}</span>
-    {%- endif -%}
-  </div>
-  
-  {%- if product.metafields.reviews.rating.value != blank -%}
-    <div class="quick-view-rating">
-      <div class="rating-stars">
-        {%- assign rating = product.metafields.reviews.rating.value -%}
-        {%- for i in (1..5) -%}
-          <span class="rating-star {% if i <= rating %}filled{% endif %}">★</span>
-        {%- endfor -%}
-      </div>
-      <span class="rating-count">({{ product.metafields.reviews.rating_count.value | default: 0 }})</span>
-    </div>
-  {%- endif -%}
-  
-  {%- if product.description != blank -%}
-    <div class="quick-view-description">
-      {{ product.description | truncate: 150 }}
-    </div>
-  {%- endif -%}
-  
-  <form class="quick-view-form" action="/cart/add" method="post" enctype="multipart/form-data">
-    <input type="hidden" name="id" value="{{ current_variant.id }}">
-    
-    {%- unless product.has_only_default_variant -%}
-      <div class="quick-view-options">
-        {%- for option in product.options_with_values -%}
-          <div class="quick-view-option">
-            <div class="quick-view-option-name">{{ option.name }}</div>
-            <div class="quick-view-option-values">
-              {%- for value in option.values -%}
-                {%- assign option_available = false -%}
-                {%- for variant in product.variants -%}
-                  {%- case option.position -%}
-                    {%- when 1 -%}
-                      {%- if variant.option1 == value and variant.available -%}
-                        {%- assign option_available = true -%}
-                        {%- break -%}
-                      {%- endif -%}
-                    {%- when 2 -%}
-                      {%- if variant.option2 == value and variant.available -%}
-                        {%- assign option_available = true -%}
-                        {%- break -%}
-                      {%- endif -%}
-                    {%- when 3 -%}
-                      {%- if variant.option3 == value and variant.available -%}
-                        {%- assign option_available = true -%}
-                        {%- break -%}
-                      {%- endif -%}
-                  {%- endcase -%}
-                {%- endfor -%}
-                
-                <div class="option-value {% if current_variant[option.name] == value %}selected{% endif %} {% unless option_available %}unavailable{% endunless %}"
-                     data-option-name="option{{ option.position }}"
-                     data-option-value="{{ value | escape }}">
-                  {{ value }}
-                </div>
-              {%- endfor -%}
-            </div>
-          </div>
-        {%- endfor -%}
-      </div>
-    {%- endunless -%}
-    
-    <div class="quick-view-quantity">
-      <label for="quick-view-quantity">{{ 'products.product.quantity' | t }}</label>
-      <div class="quantity-input">
-        <button type="button" class="quantity-btn quantity-minus" aria-label="Decrease quantity">−</button>
-        <input type="number" 
-               id="quick-view-quantity" 
-               class="quantity-number" 
-               name="quantity" 
-               value="1" 
-               min="1">
-        <button type="button" class="quantity-btn quantity-plus" aria-label="Increase quantity">+</button>
-      </div>
-    </div>
-    
-    <div class="quick-view-actions">
-      <button type="submit" 
-              class="quick-view-add-to-cart button button--primary"
-              {% unless current_variant.available %}disabled{% endunless %}>
-        {%- if current_variant.available -%}
-          <span>{{ 'products.product.add_to_cart' | t }}</span>
-        {%- else -%}
-          <span>{{ 'products.product.sold_out' | t }}</span>
-        {%- endif -%}
-      </button>
-      
-      <button type="button" class="wishlist-btn" data-product-id="{{ product.id }}">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-        </svg>
-      </button>
-      
-      <button type="button" class="compare-btn" data-product-id="{{ product.id }}">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-          <path d="M18 6H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2z"></path>
-          <path d="M6 12h12"></path>
-          <path d="M12 6v12"></path>
-        </svg>
-      </button>
-    </div>
-    
-    <script type="application/json" data-product-json>
-      {{ product | json }}
-    </script>
-  </form>
 </div>

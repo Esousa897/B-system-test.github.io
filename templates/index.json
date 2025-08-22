@@ -1,0 +1,33 @@
+{
+  "sections": {
+    "hero": {
+      "type": "hero",
+      "settings": {
+        "title": "Modern E-commerce Experience",
+        "subtext": "Sleek, fast, user-friendly.",
+        "button_label": "Shop Now",
+        "button_link": "/collections/all"
+      }
+    },
+    "featured": {
+      "type": "product-grid",
+      "settings": {
+        "title": "Featured Products",
+        "limit": 4
+      }
+    },
+    "newsletter": {
+      "type": "newsletter",
+      "settings": {
+        "title": "Stay Updated",
+        "text": "Get the latest news and offers.",
+        "button_label": "Subscribe"
+      }
+    }
+  },
+  "order": [
+    "hero",
+    "featured",
+    "newsletter"
+  ]
+}

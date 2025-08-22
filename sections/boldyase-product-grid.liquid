@@ -1,0 +1,42 @@
+{% comment %} BOLDYASE • Product Grid (collection) {% endcomment %}
+{% assign coll = collections[section.settings.collection] %}
+<style>
+.by-grid{max-width:1360px;margin:0 auto;padding:40px 20px}
+.by-grid__head{text-align:center;margin-bottom:18px}
+.by-grid__title{font:800 36px/1.1 Inter,system-ui;letter-spacing:-.01em}
+.by-grid__desc{color:#555;max-width:640px;margin:8px auto 0;font:500 16px/1.6 Inter}
+.by-grid__wrap{display:grid;gap:20px;grid-template-columns:repeat({{ section.settings.columns }}, minmax(0,1fr))}
+@media (max-width:990px){.by-grid__wrap{grid-template-columns:repeat(2, minmax(0,1fr))}}
+</style>
+
+<section class="by-grid">
+  <div class="by-grid__head">
+    <h2 class="by-grid__title">{{ section.settings.title }}</h2>
+    {% if section.settings.subtitle != blank %}<p class="by-grid__desc">{{ section.settings.subtitle }}</p>{% endif %}
+  </div>
+  <div class="by-grid__wrap">
+    {% if coll and coll.products_count > 0 %}
+      {% for product in coll.products limit: section.settings.limit %}
+        {% render 'boldyase-product-card', product: product %}
+      {% endfor %}
+    {% else %}
+      {% for i in (1..section.settings.limit) %}
+        <div style="border:1px dashed #ddd;border-radius:12px;aspect-ratio:3/4;display:grid;place-items:center;color:#999">Koppel een collectie</div>
+      {% endfor %}
+    {% endif %}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "BOLDYASE • Product Grid",
+  "settings": [
+    { "type": "text", "id": "title", "label": "Titel", "default": "Nieuwe collectie" },
+    { "type": "richtext", "id": "subtitle", "label": "Subtitel" },
+    { "type": "collection", "id": "collection", "label": "Collectie" },
+    { "type": "range", "id": "columns", "label": "Kolommen (desktop)", "min": 2, "max": 4, "step": 1, "default": 4 },
+    { "type": "range", "id": "limit", "label": "Aantal producten", "min": 4, "max": 24, "step": 4, "default": 8 }
+  ],
+  "presets": [{ "name": "BOLDYASE • Product Grid" }]
+}
+{% endschema %}

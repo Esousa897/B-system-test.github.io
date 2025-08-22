@@ -1,0 +1,16 @@
+{% comment %}
+  BOLDYASE React Component Loader
+  
+  Usage:
+  {% render "boldyase-component", 
+    component_name: "NavigationBar",
+    id: "site-header",
+    props: product
+  %}
+{% endcomment %}
+
+<div id="{{ id }}" data-boldyase-component="{{ component_name }}" data-boldyase-props="{{ props | json }}"></div>
+
+{% if settings.enable_boldyase_components %}
+  {{ "boldyase-components.js" | asset_url | script_tag }}
+{% endif %}

@@ -1,0 +1,46 @@
+{% comment %} BOLDYASE • Hero (editorial, light) {% endcomment %}
+<style>
+.by-hero{position:relative;overflow:hidden;background:#fff}
+.by-hero__in{max-width:1360px;margin:0 auto;padding:80px 20px;display:grid;gap:24px;text-align:center}
+.by-hero__title{font:800 48px/1.1 Inter,system-ui;letter-spacing:-.02em;color:#111}
+.by-hero__sub{max-width:720px;margin:0 auto;color:#555;font:500 18px/1.6 Inter}
+.by-hero__cta{display:flex;gap:12px;justify-content:center;margin-top:14px}
+.by-btn{height:48px;padding:0 22px;border-radius:8px;border:1px solid #111;font:700 14px/1 Inter;cursor:pointer}
+.by-btn--dark{background:#111;color:#fff;border-color:#111}
+.by-hero__img{margin-top:28px;border-radius:16px;overflow:hidden;max-height:520px}
+.by-hero__img img{width:100%;height:100%;object-fit:cover}
+</style>
+
+<section class="by-hero">
+  <div class="by-hero__in">
+    <h1 class="by-hero__title">{{ section.settings.title | escape }}</h1>
+    <p class="by-hero__sub">{{ section.settings.subtitle }}</p>
+    <div class="by-hero__cta">
+      {% if section.settings.cta_label != blank %}<a class="by-btn by-btn--dark" href="{{ section.settings.cta_link }}">{{ section.settings.cta_label }}</a>{% endif %}
+      {% if section.settings.cta2_label != blank %}<a class="by-btn" href="{{ section.settings.cta2_link }}">{{ section.settings.cta2_label }}</a>{% endif %}
+    </div>
+    <div class="by-hero__img">
+      {% if section.settings.image != blank %}
+        {{ section.settings.image | image_url: width: 2000 | image_tag: loading: 'eager', fetchpriority: 'high', alt: section.settings.title }}
+      {% else %}
+        <div style="background:linear-gradient(135deg,#f7f7f7,#eee);height:420px;display:grid;place-items:center;color:#888">Upload een hero-afbeelding</div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "BOLDYASE • Hero (Light)",
+  "settings": [
+    { "type": "text", "id": "title", "label": "Titel", "default": "Minimal Luxury. Editorial Calm." },
+    { "type": "richtext", "id": "subtitle", "label": "Subtitel", "default": "<p>Ontdek de nieuwe collectie — moderne essentials met een serene uitstraling.</p>" },
+    { "type": "image_picker", "id": "image", "label": "Afbeelding" },
+    { "type": "text", "id": "cta_label", "label": "Primaire knop label", "default": "Shop nu" },
+    { "type": "url", "id": "cta_link", "label": "Primaire knop link" },
+    { "type": "text", "id": "cta2_label", "label": "Secundaire knop label", "default": "Bekijk lookbook" },
+    { "type": "url", "id": "cta2_link", "label": "Secundaire knop link" }
+  ],
+  "presets": [{ "name": "BOLDYASE • Hero (Light)" }]
+}
+{% endschema %}

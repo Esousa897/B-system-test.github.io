@@ -1,0 +1,30 @@
+{% comment %} BOLDYASE • Search Overlay (light) {% endcomment %}
+<style>
+.by-sov{position:fixed;inset:0;z-index:80;display:none}
+.by-sov[aria-hidden="false"]{display:block}
+.by-sov__bg{position:absolute;inset:0;background:rgba(255,255,255,.95);backdrop-filter:blur(8px) saturate(140%)}
+.by-sov__box{position:relative;max-width:860px;margin:10vh auto 0;background:#fff;border:1px solid #eee;border-radius:14px;box-shadow:0 30px 80px rgba(0,0,0,.12);padding:24px}
+.by-sov__row{display:flex;gap:12px;align-items:center}
+.by-sov input[type="search"]{flex:1;font:500 18px/1.2 Inter,system-ui;padding:16px 18px;border:1px solid #e5e5e5;border-radius:10px;outline:none}
+.by-sov input[type="search"]:focus{border-color:#C8A857;box-shadow:0 0 0 3px rgba(200,168,87,.15)}
+.by-sov button{height:48px;padding:0 18px;border-radius:10px;border:1px solid #e5e5e5;background:#111;color:#fff;font:700 14px/1 Inter}
+.by-sov__close{position:absolute;right:14px;top:14px;background:#fff;border:1px solid #eee;border-radius:999px;width:38px;height:38px;display:grid;place-items:center;cursor:pointer}
+.by-sov__hint{margin-top:12px;color:#666;font:500 13px/1.4 Inter,system-ui}
+</style>
+
+<div id="by-search" class="by-sov" aria-hidden="true" aria-label="Zoeken">
+  <div class="by-sov__bg"></div>
+  <div class="by-sov__box">
+    <button class="by-sov__close" aria-label="Sluiten">✕</button>
+    <form class="by-sov__row" role="search" action="/search">
+      <input type="search" name="q" placeholder="Zoek producten…" aria-label="Zoek" autocomplete="off" />
+      <input type="hidden" name="type" value="product">
+      <button type="submit">Zoeken</button>
+    </form>
+    <div class="by-sov__hint">Tip: druk op ESC om te sluiten</div>
+  </div>
+</div>
+
+<script>
+(()=>{const o=document.querySelector('#by-search');if(!o)return;const e=o.querySelector('.by-sov__bg'),t=o.querySelector('.by-sov__close'),n=o.querySelector('input[type="search"]');const r=()=>{o.setAttribute('aria-hidden','false');document.documentElement.style.overflow='hidden';setTimeout(()=>n?.focus(),10)},c=()=>{o.setAttribute('aria-hidden','true');document.documentElement.style.overflow=''};document.addEventListener('by:search:open',r);t.addEventListener('click',c);e.addEventListener('click',c);document.addEventListener('keydown',e=>{if(e.key==='Escape')c()});})();
+</script>

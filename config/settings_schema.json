@@ -3,42 +3,25 @@
     "name": "Theme settings",
     "settings": [
       {
-        "type": "header",
-        "content": "Brand (Frama) colors"
+        "type": "text",
+        "id": "announcement_text",
+        "label": "Announcement text",
+        "default": "\u2728 Free shipping on orders over $75!"
       },
       {
-        "type": "color",
-        "id": "brand_primary",
-        "label": "Primary",
-        "default": "#1a1a1a"
-      },
+        "type": "image_picker",
+        "id": "logo",
+        "label": "Logo"
+      }
+    ]
+  },
+  {
+    "name": "Header",
+    "settings": [
       {
-        "type": "color",
-        "id": "brand_accent_beige",
-        "label": "Accent beige",
-        "default": "#d4b896"
-      },
-      {
-        "type": "color",
-        "id": "brand_accent_light",
-        "label": "Accent light",
-        "default": "#f8f6f3"
-      },
-      {
-        "type": "color",
-        "id": "text_primary",
-        "label": "Text primary",
-        "default": "#1a1a1a"
-      },
-      {
-        "type": "header",
-        "content": "Popups"
-      },
-      {
-        "type": "checkbox",
-        "id": "newsletter_popup_enabled",
-        "label": "Enable newsletter popup",
-        "default": true
+        "type": "link_list",
+        "id": "main_menu",
+        "label": "Main menu"
       }
     ]
   }

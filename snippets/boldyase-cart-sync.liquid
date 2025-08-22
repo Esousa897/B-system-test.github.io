@@ -1,0 +1,4 @@
+{% comment %} BOLDYASE • Cart Sync + Quick Add helpers {% endcomment %}
+<script>
+(()=>{const a=async(e=1,t=1,r)=>{const n={items:[{id:Number(e),quantity:Number(t),properties:r}]},o=await fetch('/cart/add.js',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(n)});if(!o.ok){const c=await o.text();throw new Error(c)}const s=await fetch('/cart.js').then(c=>c.json());document.querySelectorAll('[data-by-cart-count]').forEach(c=>c.textContent=s.item_count);document.dispatchEvent(new CustomEvent('by:cart:open'));return s};document.addEventListener('click',e=>{const t=e.target.closest('[data-by-add]');if(!t)return;const r=t.getAttribute('data-variant-id')||t.value;if(!r)return;e.preventDefault();t.disabled=!0;const n=t.textContent;t.textContent='Toegevoegd ✓';a(r,1).catch(()=>{t.textContent='Fout';setTimeout(()=>t.textContent=n,1500)}).finally(()=>{setTimeout(()=>{t.disabled=!1;t.textContent=n},1000)})});})();
+</script>

@@ -1,24 +1,39 @@
-<header class="site-header" role="banner">
-  <div class="container header-row">
-    <button class="nav-toggle" aria-expanded="false" aria-controls="site-nav">☰ <span class="sr-only">Menu</span></button>
-    <a class="logo" href="{{ routes.root_url }}">{{ settings.logo_text | default: 'BOLDYASE' }}</a>
-    <nav id="site-nav" class="nav" role="navigation" aria-expanded="false">
-      <ul>
-        {% for link in linklists[section.settings.menu].links %}
-          <li><a href="{{ link.url }}">{{ link.title }}</a></li>
-        {% endfor %}
-      </ul>
-    </nav>
-    <div class="header-actions">
-      <a href="{{ routes.search_url }}" data-open-search aria-label="{{ 'general.search.search' | t }}">🔎</a>
-      <a href="{{ routes.cart_url }}" data-open-cart aria-label="{{ 'sections.header.cart' | t }}">🛒 <span data-cart-count>{{ cart.item_count }}</span></a>
+{% comment %} Simple header section for BOLDYASE {% endcomment %}
+<header class="header">
+  <div class="container header-inner">
+    <a href="/" class="logo">
+      {% if section.settings.logo != blank %}
+        <img src="{{ section.settings.logo | img_url: '200x' }}" alt="{{ shop.name }}" style="height:36px;object-fit:contain">
+      {% else %}
+        BOLDYASE
+      {% endif %}
+    </a>
+
+    {% if section.settings.menu != blank %}
+      <nav aria-label="Main navigation">
+        <ul class="nav">
+          {% for link in linklists[section.settings.menu].links %}
+            <li><a href="{{ link.url }}">{{ link.title }}</a></li>
+          {% endfor %}
+        </ul>
+      </nav>
+    {% endif %}
+
+    <div style="display:flex;gap:12px;align-items:center">
+      <button data-open-search class="btn" aria-expanded="false">🔍</button>
+      <a href="/cart" class="btn" style="background:#111827">Cart <span class="cart-count" style="margin-left:8px">0</span></a>
     </div>
   </div>
 </header>
+
 {% schema %}
-{ "name":"Header", "settings":[
-  { "type":"text","id":"logo_text","label":"Logo text","default":"BOLDYASE" },
-  { "type":"link_list","id":"menu","label":"Main menu","default":"main-menu" },
-  { "type":"checkbox","id":"sticky","label":"Sticky header","default": true }
-]}
+{
+  "name": "Header",
+  "settings": [
+    { "type": "image_picker", "id": "logo", "label": "Logo" },
+    { "type": "link_list", "id": "menu", "label": "Main menu" }
+  ],
+  "blocks": [],
+  "preset": { "name": "Header" }
+}
 {% endschema %}

@@ -1,0 +1,38 @@
+{% comment %} BOLDYASE • Newsletter (light) {% endcomment %}
+<style>
+.by-news{background:#111;color:#fff}
+.by-news__in{max-width:960px;margin:0 auto;padding:56px 20px;text-align:center}
+.by-news h3{font:800 28px/1.2 Inter;margin:0 0 10px}
+.by-news p{color:#d0d0d0;max-width:560px;margin:0 auto 16px}
+.by-news form{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:10px}
+.by-news input[type="email"]{height:48px;padding:0 14px;min-width:260px;border-radius:10px;border:1px solid #333;background:#1a1a1a;color:#fff}
+.by-news button{height:48px;padding:0 18px;border-radius:10px;border:1px solid #C8A857;background:#C8A857;color:#111;font:700 14px/1 Inter;cursor:pointer}
+.by-news .by-success{color:#C8E6C9;margin-top:8px}
+.by-news .by-errors{color:#FFCDD2;margin-top:8px}
+</style>
+
+<section class="by-news">
+  <div class="by-news__in">
+    <h3>{{ section.settings.title }}</h3>
+    <p>{{ section.settings.subtitle }}</p>
+    {% form 'customer', id: 'NewsletterForm' %}
+      <input type="hidden" name="contact[tags]" value="newsletter">
+      <input type="email" name="contact[email]" aria-label="E-mailadres" placeholder="jij@voorbeeld.nl" required>
+      <button type="submit">{{ section.settings.button_label }}</button>
+      {% if form.posted_successfully? %}<div class="by-success">Bedankt, je staat op de lijst!</div>{% endif %}
+      {% if form.errors %}<div class="by-errors">{{ form.errors | default_errors }}</div>{% endif %}
+    {% endform %}
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "BOLDYASE • Newsletter",
+  "settings": [
+    { "type": "text", "id": "title", "label": "Titel", "default": "Schrijf je in" },
+    { "type": "textarea", "id": "subtitle", "label": "Subtitel", "default": "Ontvang nieuws, drops en exclusieve aanbiedingen." },
+    { "type": "text", "id": "button_label", "label": "Knop", "default": "Inschrijven" }
+  ],
+  "presets": [{ "name": "BOLDYASE • Newsletter" }]
+}
+{% endschema %}

@@ -1,0 +1,34 @@
+<section class="section" id="collection-{{ section.id }}">
+  <div class="container">
+    <div class="section-header">
+      <h2>{{ section.settings.title }}</h2>
+      {% if section.settings.description != blank %}<p>{{ section.settings.description }}</p>{% endif %}
+    </div>
+
+    <div class="product-grid">
+      {% if section.settings.collection != blank and collections[section.settings.collection] %}
+        {% assign products = collections[section.settings.collection].products %}
+      {% else %}
+        {% assign products = collections.all.products %}
+      {% endif %}
+
+      {% for product in products limit: section.settings.limit %}
+        {% render 'product-card', product: product %}
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Product grid",
+  "settings": [
+    { "type": "text", "id": "title", "label": "Title", "default": "Featured Products" },
+    { "type": "textarea", "id": "description", "label": "Description" },
+    { "type": "collection", "id": "collection", "label": "Choose collection" },
+    { "type": "number", "id": "limit", "label": "Products to show", "default": 4, "min": 1, "max": 24 }
+  ],
+  "blocks": [],
+  "preset": { "name": "Product grid" }
+}
+{% endschema %}

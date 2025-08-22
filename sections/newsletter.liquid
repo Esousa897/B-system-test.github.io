@@ -1,0 +1,24 @@
+<section class="section">
+  <div class="container" id="newsletter-{{ section.id }}">
+    <h3>{{ section.settings.title }}</h3>
+    <p>{{ section.settings.text }}</p>
+    <form method="post" action="/contact#contact_form" accept-charset="UTF-8">
+      <input type="hidden" name="form_type" value="customer">
+      <input type="email" name="contact[email]" required placeholder="Enter your email" style="padding:10px;border:1px solid #e5e7eb;border-radius:8px">
+      <button type="submit" class="btn">{{ section.settings.button_label }}</button>
+    </form>
+  </div>
+</section>
+
+{% schema %}
+{
+  "name": "Newsletter",
+  "settings": [
+    { "type": "text", "id": "title", "label": "Title", "default": "Stay Updated" },
+    { "type": "textarea", "id": "text", "label": "Text", "default": "Get the latest news and offers." },
+    { "type": "text", "id": "button_label", "label": "Button label", "default": "Subscribe" }
+  ],
+  "blocks": [],
+  "preset": { "name": "Newsletter" }
+}
+{% endschema %}

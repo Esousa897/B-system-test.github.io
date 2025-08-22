@@ -1,21 +1,26 @@
 <!doctype html>
-<html lang="{{ request.locale.iso_code }}">
+<html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>{% if page_title %}{{ page_title }} – {% endif %}{{ shop.name }}</title>
-    <meta name="theme-color" content="{{ settings.brand_primary | default: '#1a1a1a' }}">
+    <title>{{ page_title }} - {{ shop.name }}</title>
     {{ content_for_header }}
     {{ 'base.css' | asset_url | stylesheet_tag }}
     {{ 'theme.js' | asset_url | script_tag }}
   </head>
-  <body class="boldyase">
-    {% section 'announcement-bar' %}
-    {% section 'header' %}
-    <main id="MainContent" role="main" tabindex="-1">
+  <body class="template-{{ template }}">
+    <header role="banner">
+      {% section 'header' %}
+    </header>
+
+    <main role="main">
       {{ content_for_layout }}
     </main>
-    {% section 'footer' %}
-    {% section 'cookie-consent' %}
+
+    <footer role="contentinfo">
+      {% section 'footer' %}
+    </footer>
+
+    {{ content_for_footer }}
   </body>
 </html>
