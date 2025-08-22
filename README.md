@@ -1,9 +1,10 @@
-# BOLDYASE – Skeleton+ (Uploadable) • 2025-08-16T23:54:08
+# BOLDYASE - Skeleton+ (Uploadable) • 2025-08-16T23:54:08
 
 Uploadbaar Shopify OS 2.0 skelet met **alle basis-mappen** en **noodzakelijke placeholder-bestanden**.
 Doel: meteen kunnen uploaden en stapsgewijs uitbouwen (megamenus, predictive search, PWA, aanbevelingen, etc.).
 
 ## Wat zit erin
+
 - **layout/**: `theme.liquid`, `password.liquid`
 - **assets/**: `base.css`, `theme.js`
 - **sections/**: header, footer, announcement, hero, product-grid, look-grid, cart/search drawers, main product/collection/search, countdown, newsletter, trust badges, reviews, FAQ, size guide, blog/article
