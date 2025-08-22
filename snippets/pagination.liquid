@@ -1,7 +1,0 @@
-{% if paginate.pages > 1 %}
-  <nav class="pagination" role="navigation">
-    {% if paginate.previous %}<a href="{{ paginate.previous.url }}">&larr; Vorige</a>{% endif %}
-    <span>{{ paginate.current_page }} / {{ paginate.pages }}</span>
-    {% if paginate.next %}<a href="{{ paginate.next.url }}">Volgende &rarr;</a>{% endif %}
-  </nav>
-{% endif %}

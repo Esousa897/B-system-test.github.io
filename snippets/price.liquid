@@ -1,6 +1,0 @@
-{% assign price = product.price | default: 0 %}
-{% if product.compare_at_price > product.price %}
-  <span class="price"><strong>{{ price | money }}</strong> <s class="muted">{{ product.compare_at_price | money }}</s></span>
-{% else %}
-  <span class="price"><strong>{{ price | money }}</strong></span>
-{% endif %}

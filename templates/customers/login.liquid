@@ -1,7 +1,0 @@
-<h1>Login</h1>
-{% form 'customer_login' %}
-  <input type="email" name="customer[email]" placeholder="Email" required>
-  <input type="password" name="customer[password]" placeholder="Password" required>
-  <button class="btn btn--primary">{{ 'customer.login.sign_in' | t: default: 'Sign in' }}</button>
-{% endform %}
-<a href="{{ routes.account_register_url }}">Register</a> · <a href="{{ routes.account_recover_url }}">Forgot?</a>

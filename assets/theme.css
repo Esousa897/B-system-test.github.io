@@ -1,5 +1,0 @@
-:root { --max: 1200px; }
-*{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;color:#111;background:#fff}
-a{color:inherit;text-decoration:none}
-.container{max-width:var(--max);margin:0 auto;padding:16px}
-.header, .footer{padding:12px 0;border-bottom:1px solid #eee}
